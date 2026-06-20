@@ -1,0 +1,320 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CƠ SỞ THIẾT KẾ — ĐHC</title><style>
+:root{--bg:#0e1116;--card:#161b22;--ln:#2b3340;--fg:#e6edf3;--mut:#9aa7b4;--ac:#4aa3ff;--as:#d29922;--ok:#3fb950}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.55 system-ui,Segoe UI,Arial}
+a{color:#7cc4ff}.wrap{max-width:1240px;margin:0 auto;padding:18px}
+h1{font-size:21px;margin:0 0 4px}.sub{color:var(--mut);font-size:12.5px;margin-bottom:14px}
+h2{font-size:15px;letter-spacing:.04em;text-transform:uppercase;color:var(--ac);margin:30px 0 12px;border-bottom:1px solid var(--ln);padding-bottom:6px;scroll-margin-top:14px}
+h3{font-size:13.5px;color:var(--as);margin:18px 0 6px}
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:0;margin:10px 0 6px}
+.fb{position:relative;border-radius:12px;padding:12px 14px;min-width:158px;flex:1;text-decoration:none;color:var(--fg);box-shadow:0 2px 10px #0006,inset 0 0 0 1px #ffffff14;transition:transform .15s,box-shadow .15s,filter .15s;cursor:pointer}
+.fb:hover{transform:translateY(-3px);box-shadow:0 8px 22px #000a,inset 0 0 0 1px #ffffff2a;filter:brightness(1.08)}
+.fb b{display:block;font-size:12.5px;letter-spacing:.02em}.fb small{display:block;color:#0d1117bb;font-size:11px;margin-top:2px;font-weight:600}
+.fb .hint{display:none;font-size:10.5px;color:#0d1117dd;margin-top:5px;line-height:1.35}
+.fb:hover .hint{display:block}
+.fb.g1{background:linear-gradient(135deg,#3b6ea5,#2f5c8c)}.fb.g2{background:linear-gradient(135deg,#d2a04a,#b8842f)}
+.fb.g3{background:linear-gradient(135deg,#6a8caf,#52708f);color:#0d1117}.fb.g4{background:linear-gradient(135deg,#7b61ff,#5e46d6)}
+.fb.g5{background:linear-gradient(135deg,#3fb950,#2f9440)}
+.fb.g2 b,.fb.g3 b,.fb.g5 b{color:#0d1117}
+.ar{display:flex;align-items:center;justify-content:center;color:var(--ac);font-size:22px;padding:0 7px;opacity:.7}
+.flash{animation:fl 1.1s ease}@keyframes fl{0%{background:#3a2f10}60%{background:#241d10}100%{background:transparent}}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:6px 0}
+th,td{border:1px solid var(--ln);padding:5px 8px;text-align:left;vertical-align:top}th{color:var(--ac);background:#11161d}
+td.k{white-space:nowrap}.msym{font-size:13px;color:#cfe6ff;font-weight:600}
+.code{font-family:ui-monospace,Consolas,monospace;font-size:10.5px;color:#7d8da0;opacity:.8}
+tr:target{outline:2px solid var(--as)} tr:target td{background:#241d10}
+.as{color:var(--as);font-weight:600}.box{background:var(--card);border:1px solid var(--ln);border-radius:10px;padding:12px 16px;margin:8px 0}
+.pill{display:inline-block;padding:1px 9px;border-radius:11px;font-size:11.5px;font-weight:600;margin-right:6px}
+.pill.ok{background:#15351f;color:#7fe0a0;border:1px solid #2f9440}.pill.as{background:#332810;color:#e6c160;border:1px solid #b8842f}
+.pill.bad{background:#3a1414;color:#f0a0a0;border:1px solid #9a2222}
+footer{color:var(--mut);font-size:12px;border-top:1px solid var(--ln);margin-top:26px;padding-top:12px}
+</style></head><body><div class="wrap">
+<h1>CƠ SỞ THIẾT KẾ — Đập hộp chìm (ĐHC)</h1>
+<div class="sub">Hồ sơ cơ sở thiết kế: số liệu đầu vào · tham số &amp; hệ số (kèm nguồn tiêu chuẩn) · ký hiệu toán học · lý thuyết · kết quả then chốt.</div>
+<div class="flow" id="flow">
+<a class="fb g1" href="#input" data-t="input"><b>ĐẦU VÀO</b><small>hình học·thủy văn·thủy lực·vật liệu·địa chất</small><span class="hint">Số liệu gốc của công trình: kích thước đơn nguyên, mực nước thiết kế, vật liệu, hồ khoan nền.</span></a>
+<div class="ar">→</div>
+<a class="fb g2" href="#params" data-t="params"><b>THAM SỐ &amp; HỆ SỐ</b><small>giá trị + nguồn</small><span class="hint">206 tham số & hệ số an toàn, mỗi dòng có nguồn tiêu chuẩn và ký hiệu toán; chip hệ số ở HỒ SƠ trỏ về đây.</span></a>
+<div class="ar">→</div>
+<a class="fb g3" href="#standards" data-t="standards"><b>TIÊU CHUẨN</b><small>TCVN/QCVN/DNV/IMO</small><span class="hint">Danh mục quy chuẩn/tiêu chuẩn áp dụng — nuôi cột "Nguồn" của bảng tham số.</span></a>
+<div class="ar">→</div>
+<a class="fb g4" href="#theory" data-t="theory"><b>LÝ THUYẾT</b><small>phương pháp &amp; công thức</small><span class="hint">Phương pháp & công thức ký hiệu toán cho từng hạng mục kiểm (thư viện methods –).</span></a>
+<div class="ar">→</div>
+<a class="fb g5" href="#results" data-t="results"><b>KIỂM TRA → KẾT QUẢ</b><small>ĐẠT/KHÔNG + KPI</small><span class="hint">Kết quả then chốt của cấu hình thiết kế; chi tiết theo hạng mục ở HỒ SƠ KIỂM TRA.</span></a>
+</div>
+<h2 id="input">① Đầu vào thiết kế</h2><div class="box"><table><tr><th>Hạng mục</th><th>Giá trị</th><th>Nguồn</th></tr><tr><td>Hình học đơn nguyên B×L×H</td><td>150 × 50 × 16.99 m (2 tầng; Hàm Luông)</td><td>Số liệu thiết kế Hàm Luông §2; sáng chế ĐHC (B vuông góc dòng chảy, L song song dòng chảy)</td></tr><tr><td>Mực nước (biển/sông)</td><td>HHWL +3.50 / BĐKH +5.33 / LLWL −1.42 m; dH≈4.92 m</td><td>TCVN 9901:2023; số liệu thiết kế §5</td></tr><tr><td>Địa chất nền</td><td>G1 = hố khoan 219 (sét mềm ~2.4 m dưới đáy → QI3 chặt); xử lý CDM</td><td>hố khoan 219; [suy từ số liệu địa chất]</td></tr><tr><td>Vật liệu</td><td>BT B30 (R<sub>b</sub> 17 MPa) · thép CB400 (R<sub>s</sub> 350 MPa) · van CCT38 (f 230 MPa)</td><td>TCVN 5574:2018 / 5575:2012</td></tr></table></div>
+<h2 id="params">② Tham số &amp; hệ số (kèm nguồn tiêu chuẩn)</h2>
+<div class="sub"><span class="pill ok">60 có tiêu chuẩn/tài liệu</span><span class="pill as">155 [Sơ bộ] (có cơ sở)</span><span class="pill ok">0 nguồn mơ hồ</span></div>
+<div class="sub" style="color:#d29922">▪ <b>[Sơ bộ]</b> = giá trị thiết kế sơ bộ, sẽ chuẩn hóa bằng thí nghiệm/đo đạc hiện trường.</div>
+<h3>Vật liệu cơ bản</h3><table><tr><th>Ký hiệu</th><th>Ý nghĩa</th><th>Giá trị</th><th>Đơn vị</th><th>Nguồn (tiêu chuẩn + bảng/điều khoản)</th></tr>
+<tr><td class="k"><span class="msym">γ<sub>c</sub></span></td><td>Bê tông cốt thép, thân đập</td><td>25.0</td><td>kN/m3</td><td>TCVN 5574:2018 (bê tông cốt thép, γ=25 kN/m3)</td></tr>
+<tr><td class="k"><span class="msym">γ<sub>s</sub></span></td><td>Thép: cửa van / bản phao</td><td>78.5</td><td>kN/m3</td><td>TCVN 5575:2012 (thép kết cấu, γ=78.5 kN/m3)</td></tr>
+<tr><td class="k"><span class="msym">γ<sub>w</sub></span></td><td>Nước; thiên an toàn, phân bố đều</td><td>10.0</td><td>kN/m3</td><td>TCVN 4253:2012 (γ nước); chốt 10.0 kN/m3 thiên an toàn</td></tr>
+<tr><td class="k"><span class="msym">β</span></td><td>Ma sát đáy BTCT–nền (0.4–0.5 sơ bộ) <span class="as">[Sơ bộ]</span></td><td>0.40</td><td>-</td><td>[Cơ sở: ma sát BTCT–nền sơ bộ 0.4–0.5, chốt theo số liệu địa chất; TCVN 4253:2012]</td></tr>
+</table>
+<h3>Vật liệu bê tông/thép</h3><table><tr><th>Ký hiệu</th><th>Ý nghĩa</th><th>Giá trị</th><th>Đơn vị</th><th>Nguồn (tiêu chuẩn + bảng/điều khoản)</th></tr>
+<tr><td class="k"><span class="msym">E<sub>b</sub></span></td><td>Mô đun đàn hồi bê tông (FE biến dạng phẳng)</td><td>3.25e7</td><td>kPa</td><td>TCVN 5574:2018 (E_b, bê tông B30 ~ 32.5 GPa) — B30</td></tr>
+<tr><td class="k"><span class="msym">ν<sub>b</sub></span></td><td>Hệ số Poisson của bê tông</td><td>0.20</td><td>-</td><td>TCVN 5574:2018</td></tr>
+<tr><td class="k"><span class="msym">R<sub>b</sub></span></td><td>Cường độ chịu nén tính toán</td><td>17000.0</td><td>kPa</td><td>TCVN 5574:2018 (R_b nén tính toán B30 ~ 17 MPa) — B30</td></tr>
+<tr><td class="k"><span class="msym">R<sub>bt</sub></span></td><td>Cường độ chịu kéo tính toán (cờ nứt)</td><td>1200.0</td><td>kPa</td><td>TCVN 5574:2018 (R_bt kéo tính toán B30 ~ 1.2 MPa) — B30</td></tr>
+<tr><td class="k"><span class="msym">R<sub>s</sub></span></td><td>Giới hạn chảy tính toán của cốt thép</td><td>350000.0</td><td>kPa</td><td>TCVN 5574:2018 (R_s cốt thép CB400 ~ 350 MPa) — CB400-V</td></tr>
+<tr><td class="k"><span class="msym">a<sub>bv</sub></span></td><td>Lớp bảo vệ tới trọng tâm cốt thép (sơ bộ)</td><td>0.05</td><td>m</td><td>TCVN 5574:2018 (lớp bảo vệ, môi trường biển — sơ bộ)</td></tr>
+<tr><td class="k"><span class="msym">[ρ]<sub>min</sub></span></td><td>Hàm lượng cốt thép tối thiểu</td><td>0.0010</td><td>-</td><td>TCVN 5574:2018 §10 (hàm lượng cốt thép tối thiểu ~0.1%)</td></tr>
+<tr><td class="k"><span class="msym">[ρ]<sub>max</sub></span></td><td>Hàm lượng cốt thép tối đa hợp lý</td><td>0.0350</td><td>-</td><td>TCVN 5574:2018 (hàm lượng tối đa hợp lý ~3.5%)</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Phân vị cho σ_thiết kế (loại đỉnh ứng suất tại góc lưới)</td><td>95.0</td><td>-</td><td>Lọc kỳ dị tại góc theo St-Venant / FE (phương pháp đập tàu thủy)</td></tr>
+</table>
+<h3>Hệ số an toàn &amp; tổ hợp</h3><table><tr><th>Ký hiệu</th><th>Ý nghĩa</th><th>Giá trị</th><th>Đơn vị</th><th>Nguồn (tiêu chuẩn + bảng/điều khoản)</th></tr>
+<tr><td class="k"><span class="msym">k<sub>n</sub></span></td><td>Hệ số tin cậy theo cấp công trình</td><td>1.25</td><td>-</td><td>QCVN 04-05:2022 — Cấp I</td></tr>
+<tr><td class="k"><span class="msym">γ<sub>lc</sub> (cơ bản)</span></td><td>Tổ hợp tải cơ bản</td><td>1.00</td><td>-</td><td>TCVN 4253:2012 (hệ số tổ hợp tải cơ bản n_c=1.00)</td></tr>
+<tr><td class="k"><span class="msym">γ<sub>lc</sub> (đặc biệt)</span></td><td>Tổ hợp tải đặc biệt/giới hạn</td><td>0.90</td><td>-</td><td>TCVN 4253:2012 (hệ số tổ hợp tải đặc biệt n_c=0.90)</td></tr>
+<tr><td class="k"><span class="msym">γ<sub>f</sub> (bản thân, có lợi)</span></td><td>Trọng lượng bản thân (có lợi)</td><td>0.95</td><td>-</td><td>TCVN 2737:2023 / QCVN 04-05:2022 (hệ số vượt tải trọng lượng bản thân, có lợi 0.95)</td></tr>
+<tr><td class="k"><span class="msym">γ<sub>f</sub> (bản thân, bất lợi)</span></td><td>Trọng lượng bản thân (bất lợi)</td><td>1.05</td><td>-</td><td>TCVN 2737:2023 / QCVN 04-05:2022 (hệ số vượt tải trọng lượng bản thân, bất lợi 1.05)</td></tr>
+<tr><td class="k"><span class="msym">γ<sub>f</sub> (thủy tĩnh)</span></td><td>Thủy tĩnh / đẩy nổi / áp lực mặt trên</td><td>1.00</td><td>-</td><td>TCVN 2737:2023 (hệ số vượt tải áp lực thủy tĩnh/đẩy nổi/mặt trên = 1.00)</td></tr>
+<tr><td class="k"><span class="msym">γ<sub>f</sub> (gió)</span></td><td>Gió (giai đoạn sau)</td><td>1.30</td><td>-</td><td>TCVN 2737:2023 (hệ số vượt tải gió ~1.30; giai đoạn sau)</td></tr>
+<tr><td class="k"><span class="msym">γ<sub>f</sub> (động đất)</span></td><td>Động đất (giai đoạn sau)</td><td>1.10</td><td>-</td><td>TCVN 9386:2012 (tải động đất; giai đoạn sau)</td></tr>
+<tr><td class="k"><span class="msym">[K<sub>lật</sub>]</span></td><td>Hệ số lật K = m·Mr/(kₙ·n_c·Mo) ≥ 1.0</td><td>1.0</td><td>-</td><td>TCVN 4253:2012 / QCVN 04-05:2022 (trạng thái giới hạn)</td></tr>
+<tr><td class="k"><span class="msym">[K<sub>trượt</sub>]</span></td><td>Hệ số trượt K = m·(β·N+Ep)/(kₙ·n_c·ΣH) ≥ 1.0</td><td>1.0</td><td>-</td><td>TCVN 4253:2012 / QCVN 04-05:2022 (trạng thái giới hạn)</td></tr>
+<tr><td class="k"><span class="msym">m</span></td><td>Hệ số điều kiện làm việc trên sức kháng (mặc định 1.0; lấy theo bảng nền/kết cấu)</td><td>1.0</td><td>-</td><td>TCVN 4253:2012 Bảng 6/7 (hệ số điều kiện làm việc) — Bảng 6/7</td></tr>
+<tr><td class="k"><span class="msym">[K<sub>nổi</sub>]</span></td><td>Ngưỡng ổn định nổi (dự trữ đẩy nổi)</td><td>1.1</td><td>-</td><td>QCVN 04-05:2022 / TCVN 4253:2012 (dự trữ đẩy nổi K_nổi ≥ 1.1)</td></tr>
+<tr><td class="k"><span class="msym">[FS]<sub>nền</sub></span></td><td>Hệ số an toàn sức chịu tải (nền xử lý; khung Brinch–Hansen riêng)</td><td>2.0</td><td>-</td><td>TCVN 4253:2012 / QCVN 04-05:2022 (FS sức chịu tải nền ≥ 2.0, Brinch–Hansen)</td></tr>
+<tr><td class="k"><span class="msym">[FS]</span> </td><td>Ngưỡng hệ số an toàn sức chịu tải không thoát nước</td><td>2.0</td><td>-</td><td>FS sức chịu tải không thoát nước ngắn hạn (= FS thoát nước tối thiểu; khung Brinch–Hansen/TCVN 4253)</td></tr>
+</table>
+<h3>Mực nước thiết kế</h3><table><tr><th>Ký hiệu</th><th>Ý nghĩa</th><th>Giá trị</th><th>Đơn vị</th><th>Nguồn (tiêu chuẩn + bảng/điều khoản)</th></tr>
+<tr><td class="k"><span class="msym">HHWL</span> </td><td>Mực nước biển thiết kế HHWL</td><td>3.50</td><td>m</td><td>TCVN 9901:2023 B.6 — P=0.5%</td></tr>
+<tr><td class="k"><span class="msym">LLWL</span> </td><td>Mực nước thông thuyền thấp</td><td>-1.42</td><td>m</td><td>Chuỗi trạm An Thuận — P95</td></tr>
+<tr><td class="k"><span class="msym">ΔH</span> </td><td>Chênh cột nước thiết kế (L từ bài toán thấm)</td><td>4.92</td><td>m</td><td>số liệu thiết kế §4</td></tr>
+</table>
+<h3>Thấm / xói ngầm</h3><table><tr><th>Ký hiệu</th><th>Ý nghĩa</th><th>Giá trị</th><th>Đơn vị</th><th>Nguồn (tiêu chuẩn + bảng/điều khoản)</th></tr>
+<tr><td class="k"><span class="msym">k</span> </td><td>Hệ số thấm nền k (mô hình FE) <span class="as">[Sơ bộ]</span></td><td>1e-5</td><td>m/s</td><td>[Cơ sở: hệ số thấm cát nền ~1e-5 m/s, mô hình 1 lớp cũ]</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>k_màng chắn = tỉ lệ·max(k các lớp)</td><td>1e-3</td><td>-</td><td>Tỉ lệ thấm màng chắn/cừ so với đất (rào cản thấm thấp)</td></tr>
+<tr><td class="k"><span class="msym">k<sub>1</sub></span> </td><td>Lớp 1 (mô hình thấm)</td><td>1e-7</td><td>m/s</td><td>Sét châu thổ mềm (lớp trên) — k 1e-8..1e-6 (bảng Holtz &amp; Kovacs)</td></tr>
+<tr><td class="k"><span class="msym">k<sub>2</sub></span> </td><td>Lớp 2 (mô hình thấm)</td><td>5e-5</td><td>m/s</td><td>Cát chặt vừa (lớp giữa) — k 1e-5..1e-3</td></tr>
+<tr><td class="k"><span class="msym">k<sub>3</sub></span> </td><td>Lớp 3 (mô hình thấm)</td><td>1e-6</td><td>m/s</td><td>Nền bùn cứng hơn (lớp dưới) — k 1e-7..1e-5</td></tr>
+<tr><td class="k"><span class="msym">FS<sub>xói ngầm</sub></span></td><td>Hệ số an toàn gradient thoát (xói ngầm)</td><td>4.0</td><td>-</td><td>TCVN 4253:2012 / QCVN 04-05:2022 (FS xói ngầm = 4-5 cho công trình cấp đặc biệt) — FS 4-5</td></tr>
+<tr><td class="k"><span class="msym">[i]</span></td><td>Gradient thấm trung bình cho phép (Bligh/Lane, sơ bộ)</td><td>0.10</td><td>-</td><td>TCVN 4253:2012 (gradient thấm trung bình cho phép, Bligh/Lane); số liệu thiết kế §4</td></tr>
+<tr><td class="k"><span class="msym">i<sub>cr</sub></span></td><td>Gradient thoát tới hạn ~ (Gs−1)/(1+e), tỉ lệ trọng lượng đẩy nổi</td><td>0.90</td><td>-</td><td>Terzaghi: i_cr=(Gs−1)/(1+e) gradient tới hạn đùn đất; TCVN 4253:2012</td></tr>
+<tr><td class="k"><span class="msym">FS<sub>thấm</sub></span></td><td>Hệ số an toàn gradient thoát</td><td>4.0</td><td>-</td><td>TCVN 4253:2012 / QCVN 04-05:2022 (FS xói ngầm 4–5, công trình cấp đặc biệt) — FS 4–5</td></tr>
+<tr><td class="k"><span class="msym">C<sub>Lane</sub></span></td><td>Hệ số đường viền thấm Lane C; yêu cầu L_w ≥ C·dH</td><td>7.0</td><td>-</td><td>Lane (1935) tỉ lệ đường viền thấm — bùn/cát mịn (bảng)</td></tr>
+<tr><td class="k"><span class="msym">FS<sub>Lane</sub></span></td><td>FS_xói ngầm = [i_Lane]/i</td><td>1.5</td><td>-</td><td>FS kháng xói ngầm (cơ sở gradient trung bình Lane; FS điển hình 1.5)</td></tr>
+</table>
+<h3>Xói</h3><table><tr><th>Ký hiệu</th><th>Ý nghĩa</th><th>Giá trị</th><th>Đơn vị</th><th>Nguồn (tiêu chuẩn + bảng/điều khoản)</th></tr>
+<tr><td class="k"><span class="msym">V</span> </td><td>Lưu tốc dòng chảy thiết kế hạ lưu cửa</td><td>2.30</td><td>m/s</td><td>Số liệu thiết kế VH-3b (V tại khoang cửa ~2.3 m/s)</td></tr>
+<tr><td class="k"><span class="msym">V<sub>cr</sub></span> </td><td>Lưu tốc xói tới hạn của vật liệu đáy</td><td>1.50</td><td>m/s</td><td>Số liệu thiết kế VH-3b (>1.5 → cần lớp bảo vệ)</td></tr>
+<tr><td class="k"><span class="msym">d<sub>50</sub></span></td><td>Đường kính d50 đá bảo vệ</td><td>0.30</td><td>m</td><td>Kích thước đá trung vị lớp gia cố (thiết kế; lớp áo đá)</td></tr>
+<tr><td class="k"><span class="msym">q</span> </td><td>Lưu lượng đơn vị cho công thức chiều sâu xói</td><td>80.0</td><td>m2/s</td><td>Lưu lượng đơn vị q=Q/B_tổng tại cửa (P0.5% Q=60646 / ~750 m toàn tuyến)</td></tr>
+<tr><td class="k"><span class="msym">h<sub>t</sub></span> </td><td>Chiều sâu nước hạ lưu</td><td>8.00</td><td>m</td><td>Chiều sâu nước hạ lưu (sơ bộ, theo mực nước số liệu thiết kế)</td></tr>
+<tr><td class="k"><span class="msym">K<sub>xói</sub></span></td><td>Hệ số dạng d_s = K·q^0.57/d90^0.32</td><td>1.90</td><td>-</td><td>Hệ số xói cục bộ (hạ lưu công trình, Schoklitsch/thực nghiệm)</td></tr>
+<tr><td class="k"><span class="msym">L<sub>bv</sub></span> </td><td>Chiều dài sân bảo vệ</td><td>20.0</td><td>m</td><td>Chiều dài lớp bảo vệ đáy hạ lưu (sân/thảm đá)</td></tr>
+<tr><td class="k"><span class="msym">FS<sub>xói</sub></span></td><td>Hệ số an toàn lớp bảo vệ xói</td><td>1.30</td><td>-</td><td>FS xói (chiều dài/sâu lớp bảo vệ so với xói tính toán)</td></tr>
+</table>
+<h3>Địa kỹ thuật / nền</h3><table><tr><th>Ký hiệu</th><th>Ý nghĩa</th><th>Giá trị</th><th>Đơn vị</th><th>Nguồn (tiêu chuẩn + bảng/điều khoản)</th></tr>
+<tr><td class="k"><span class="msym">G<sub>s</sub></span></td><td>i_cr=(Gs-1)/(1+e)</td><td>2.68</td><td>-</td><td>Tỉ trọng hạt đất (đất châu thổ, sơ bộ)</td></tr>
+<tr><td class="k"><span class="msym">e<sub>0</sub></span></td><td>i_cr=(Gs-1)/(1+e)</td><td>0.85</td><td>-</td><td>Hệ số rỗng tại chỗ (châu thổ mềm, sơ bộ)</td></tr>
+<tr><td class="k"><span class="msym">[σ]</span> </td><td>Sức chịu tải cho phép của bùn mềm chưa xử lý <span class="as">[Sơ bộ]</span></td><td>40.0</td><td>kPa</td><td>[Cơ sở: bùn sét ĐBSCL sau bóc ~40 kPa, sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">μ</span> </td><td>Ma sát đáy nền chưa xử lý</td><td>0.30</td><td>-</td><td>Tiếp xúc sét mềm/BTCT (sơ bộ)</td></tr>
+<tr><td class="k"><span class="msym">φ′</span></td><td>Góc ma sát nền chưa xử lý</td><td>5.0</td><td>deg</td><td>Bùn châu thổ mềm (gần không thoát nước)</td></tr>
+<tr><td class="k"><span class="msym">c′</span></td><td>Lực dính nền chưa xử lý (su)</td><td>8.0</td><td>kPa</td><td>su không thoát nước ~ σ_cho phép/5.14</td></tr>
+<tr><td class="k"><span class="msym">[σ]</span> </td><td>Sức chịu tải cho phép của nền đã xử lý <span class="as">[Sơ bộ]</span></td><td>150.0</td><td>kPa</td><td>[Cơ sở: nền xử lý thay thế cát/sỏi ~150 kPa, sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">μ</span> </td><td>Ma sát đáy nền đã xử lý (μ) <span class="as">[Sơ bộ]</span></td><td>0.50</td><td>-</td><td>[Cơ sở: ma sát đáy bê tông/nền xử lý 0.5, sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">φ′ (cát)</span></td><td>Góc ma sát nền đã xử lý <span class="as">[Sơ bộ]</span></td><td>30.0</td><td>deg</td><td>[Cơ sở: góc ma sát đệm cát 30°, sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">c′</span> </td><td>Lực dính nền đã xử lý</td><td>0.0</td><td>kPa</td><td>Đệm cát rời (không dính)</td></tr>
+<tr><td class="k"><span class="msym">[σ]</span> </td><td>Sức chịu tải cho phép nền cọc <span class="as">[Sơ bộ]</span></td><td>300.0</td><td>kPa</td><td>Sức chịu tải nhóm cọc cho phép [Sơ bộ; xác nhận bằng thiết kế cọc]</td></tr>
+<tr><td class="k"><span class="msym">μ</span> </td><td>Ma sát đáy nền cọc <span class="as">[Sơ bộ]</span></td><td>0.50</td><td>-</td><td>Đài cọc / đã xử lý [Sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">φ′</span> </td><td>Góc ma sát nền cọc <span class="as">[Sơ bộ]</span></td><td>30.0</td><td>deg</td><td>Tương đương nền cọc [Sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">c′</span> </td><td>Lực dính nền cọc <span class="as">[Sơ bộ]</span></td><td>0.0</td><td>kPa</td><td>[Sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">[σ]</span> </td><td>Sức chịu tải cho phép nền cọc xi măng–đất (DSM) <span class="as">[Sơ bộ]</span></td><td>250.0</td><td>kPa</td><td>Nhóm cột trộn sâu đất–xi măng [Sơ bộ; xác nhận bằng thiết kế DSM]</td></tr>
+<tr><td class="k"><span class="msym">μ</span> </td><td>Ma sát đáy nền DSM <span class="as">[Sơ bộ]</span></td><td>0.50</td><td>-</td><td>Nền xử lý DSM [Sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">φ′</span> </td><td>Góc ma sát nền DSM <span class="as">[Sơ bộ]</span></td><td>28.0</td><td>deg</td><td>Tương đương DSM [Sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">c′</span> </td><td>Lực dính nền DSM <span class="as">[Sơ bộ]</span></td><td>20.0</td><td>kPa</td><td>Lực dính đất–xi măng [Sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">C<sub>c</sub></span> </td><td>Chỉ số nén</td><td>0.80</td><td>-</td><td>Sét châu thổ mềm (tính nén cao)</td></tr>
+<tr><td class="k"><span class="msym">e<sub>0</sub></span> </td><td>Hệ số rỗng ban đầu</td><td>1.40</td><td>-</td><td>Hệ số rỗng sét châu thổ mềm</td></tr>
+<tr><td class="k"><span class="msym">E</span> </td><td>Mô đun đàn hồi</td><td>3000.0</td><td>kPa</td><td>Mô đun đàn hồi sét mềm (sơ bộ)</td></tr>
+<tr><td class="k"><span class="msym">C<sub>c</sub></span> </td><td>Chỉ số nén</td><td>0.05</td><td>-</td><td>Đệm cát/sỏi đầm chặt (tính nén thấp)</td></tr>
+<tr><td class="k"><span class="msym">e<sub>0</sub></span> </td><td>Hệ số rỗng ban đầu</td><td>0.55</td><td>-</td><td>Hệ số rỗng cát đầm chặt</td></tr>
+<tr><td class="k"><span class="msym">E</span> </td><td>Mô đun đàn hồi</td><td>40000.0</td><td>kPa</td><td>Mô đun cát/sỏi chặt (sơ bộ)</td></tr>
+<tr><td class="k"><span class="msym">E</span> </td><td>Mô đun đàn hồi</td><td>15000.0</td><td>kPa</td><td>Mô đun cát mịn/bùn (sơ bộ, lớp 2 mô hình SSI)</td></tr>
+<tr><td class="k"><span class="msym">E</span> </td><td>Mô đun đàn hồi</td><td>8000.0</td><td>kPa</td><td>Mô đun sét cứng (sơ bộ, lớp 3 mô hình SSI)</td></tr>
+<tr><td class="k"><span class="msym">C<sub>c</sub></span> </td><td>Chỉ số nén</td><td>0.02</td><td>-</td><td>Nền cọc (truyền tải xuống tầng chặt sâu; lún dư nhỏ)</td></tr>
+<tr><td class="k"><span class="msym">e<sub>0</sub></span> </td><td>Hệ số rỗng ban đầu</td><td>0.50</td><td>-</td><td>Tương đương nền cọc</td></tr>
+<tr><td class="k"><span class="msym">E</span> </td><td>Mô đun đàn hồi <span class="as">[Sơ bộ]</span></td><td>100000.0</td><td>kPa</td><td>Mô đun tương đương nhóm cọc [Sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">C<sub>c</sub></span> </td><td>Chỉ số nén</td><td>0.03</td><td>-</td><td>Cc tương đương CDM ~ Cc_mềm/(1+a_s(n−1)), hệ số cải thiện (n=E_cột/E_đất~25, a_s=0.25) → ~0.03 (Priebe/Bergado)</td></tr>
+<tr><td class="k"><span class="msym">e<sub>0</sub></span> </td><td>Hệ số rỗng ban đầu</td><td>0.50</td><td>-</td><td>Hệ số rỗng nền xử lý DSM</td></tr>
+<tr><td class="k"><span class="msym">E<sub>tđ</sub></span> </td><td>Mô đun đàn hồi tương đương</td><td>42000.0</td><td>kPa</td><td>E tương đương CDM E_tđ=a_s·E_cột+(1−a_s)·E_mềm (a_s=0.25, E_cột=150e3, E_mềm=6e3)</td></tr>
+<tr><td class="k"><span class="msym">E<sub>đệm</sub></span> </td><td>Mô đun lớp đệm</td><td>15000.0</td><td>kPa</td><td>đệm cát-sỏi lót móng (~1.5 m, đầm chặt; E Young suy từ Eoed~20000)</td></tr>
+<tr><td class="k"><span class="msym">k<sub>đệm</sub></span> </td><td>Hệ số thấm lớp đệm</td><td>1e-4</td><td>m/s</td><td>Lớp đệm thoát nước cát–sỏi</td></tr>
+<tr><td class="k"><span class="msym">E<sub>sm</sub></span> </td><td>Mô đun sét mềm</td><td>6000.0</td><td>kPa</td><td>sét rất mềm yếu Lớp 2 (E Young suy từ Eoed~8000, Stroud)</td></tr>
+<tr><td class="k"><span class="msym">C<sub>c</sub> (sét mềm)</span></td><td>Chỉ số nén</td><td>0.20</td><td>-</td><td>sét mềm Lớp 2 (Cc thiết kế; mẫu hình 0.5e0~0.45 bất lợi hơn)</td></tr>
+<tr><td class="k"><span class="msym">e<sub>0</sub> (sét mềm)</span></td><td>Hệ số rỗng ban đầu</td><td>0.85</td><td>-</td><td>sét mềm Lớp 2 hệ số rỗng</td></tr>
+<tr><td class="k"><span class="msym">k<sub>sm</sub></span> </td><td>Hệ số thấm sét mềm</td><td>1e-9</td><td>m/s</td><td>sét mềm Lớp 2 (rất ít thấm)</td></tr>
+<tr><td class="k"><span class="msym">γ</span> </td><td>Trọng lượng riêng</td><td>17.5</td><td>kN/m3</td><td>sét mềm Lớp 2 bão hoà</td></tr>
+<tr><td class="k"><span class="msym">h<sub>sm</sub></span> </td><td>Bề dày sét mềm</td><td>12.0</td><td>m</td><td>bề dày sét mềm DƯỚI ĐÁY (Lớp 2a/2b/4, hố khoan-0 đến ~−12; mốc đáy=−11.59)</td></tr>
+<tr><td class="k"><span class="msym">E<sub>cv</sub></span> </td><td>Mô đun lớp chặt vừa</td><td>9000.0</td><td>kPa</td><td>sét/cát chặt vừa Lớp 3-6 (E Young suy từ Eoed~12000)</td></tr>
+<tr><td class="k"><span class="msym">C<sub>c</sub></span> </td><td>Chỉ số nén</td><td>0.10</td><td>-</td><td>lớp chặt vừa Cc</td></tr>
+<tr><td class="k"><span class="msym">e<sub>0</sub></span> </td><td>Hệ số rỗng ban đầu</td><td>0.70</td><td>-</td><td>lớp chặt vừa hệ số rỗng</td></tr>
+<tr><td class="k"><span class="msym">k</span> </td><td>Hệ số thấm</td><td>1e-7</td><td>m/s</td><td>lớp chặt vừa</td></tr>
+<tr><td class="k"><span class="msym">γ</span> </td><td>Trọng lượng riêng</td><td>19.0</td><td>kN/m3</td><td>lớp chặt vừa bão hoà</td></tr>
+<tr><td class="k"><span class="msym">h<sub>cv</sub></span> </td><td>Bề dày lớp chặt vừa</td><td>28.0</td><td>m</td><td>bề dày lớp chặt vừa Lớp 3-8 (đến cát chặt Lớp 15 ~ hố khoan −41 / mực nước biển TB −52.6)</td></tr>
+<tr><td class="k"><span class="msym">d<sub>bóc</sub></span> </td><td>Chiều sâu bóc lớp mặt</td><td>1.0</td><td>m</td><td>bóc lớp bùn mặt mềm nhất (~0.5-1.5 m) khi nạo vét tới đáy</td></tr>
+<tr><td class="k"><span class="msym">h<sub>đệm</sub></span> </td><td>Bề dày lớp đệm san phẳng</td><td>1.0</td><td>m</td><td>đệm san phẳng/thoát nước thay vào (= chiều sâu bóc)</td></tr>
+<tr><td class="k"><span class="msym">E<sub>SCP</sub></span> </td><td>Mô đun tương đương cọc cát đầm (SCP) <span class="as">[Sơ bộ]</span></td><td>30000.0</td><td>kPa</td><td>cọc cát đầm SCP — mô đun tương đương [Sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">E<sub>cđ</sub></span> </td><td>Mô đun tương đương cột đá <span class="as">[Sơ bộ]</span></td><td>25000.0</td><td>kPa</td><td>cột đá (rung sâu, bọc vải địa cho sét rất mềm) — mô đun tương đương (Sơ bộ)</td></tr>
+<tr><td class="k"><span class="msym">E<sub>cc</sub></span> </td><td>Mô đun cát chặt</td><td>22000.0</td><td>kPa</td><td>cát chặt-rất chặt Lớp 15+ (E Young suy từ Eoed~30000, tầng chịu lực/chứa nước)</td></tr>
+<tr><td class="k"><span class="msym">k<sub>cc</sub></span> </td><td>Hệ số thấm cát chặt</td><td>1e-5</td><td>m/s</td><td>cát chặt-rất chặt (tầng chứa nước)</td></tr>
+<tr><td class="k"><span class="msym">γ</span> </td><td>Trọng lượng riêng</td><td>20.0</td><td>kN/m3</td><td>cát chặt bão hoà</td></tr>
+<tr><td class="k"><span class="msym">E<sub>cột</sub></span> </td><td>Mô đun cột xử lý <span class="as">[Sơ bộ]</span></td><td>150000.0</td><td>kPa</td><td>mô đun cột xi măng-đất CDM (E_col, Sơ bộ 100-200 MPa)</td></tr>
+<tr><td class="k"><span class="msym">a<sub>s</sub></span> </td><td>Tỉ lệ thay thế diện tích <span class="as">[Sơ bộ]</span></td><td>0.25</td><td>-</td><td>tỉ lệ thay thế diện tích a_s (CDM, Sơ bộ 0.2-0.4)</td></tr>
+<tr><td class="k"><span class="msym">D<sub>xl</sub></span> </td><td>Chiều sâu xử lý <span class="as">[Sơ bộ]</span></td><td>12.0</td><td>m</td><td>chiều sâu xử lý sâu qua đới sét mềm (Sơ bộ ~ bề dày sét mềm)</td></tr>
+<tr><td class="k"><span class="msym">E<sub>cọc</sub></span> </td><td>Mô đun tương đương nền cọc</td><td>120000.0</td><td>kPa</td><td>mô đun tương đương nền cọc (tải truyền xuống cát chặt)</td></tr>
+<tr><td class="k"><span class="msym">γ′</span> </td><td>Cho trọng lượng đẩy nổi &amp; phụ tải</td><td>19.0</td><td>kN/m3</td><td>Trọng lượng riêng đất bão hòa (sơ bộ)</td></tr>
+<tr><td class="k"><span class="msym">D</span> </td><td>Chiều sâu phụ tải q=γ·D</td><td>2.0</td><td>m</td><td>Độ chôn móng dưới đáy lân cận (sơ bộ)</td></tr>
+<tr><td class="k"><span class="msym">H<sub>c</sub></span> </td><td>Lớp chịu nén cố kết</td><td>15.0</td><td>m</td><td>Bề dày lớp chịu nén dưới đáy móng (sơ bộ)</td></tr>
+<tr><td class="k"><span class="msym">[S]</span></td><td>Giới hạn lún</td><td>0.30</td><td>m</td><td>TCVN 9362:2012 Bảng 16 / TCVN 4253:2012 (lún giới hạn công trình thủy lợi cấp đặc biệt, sơ bộ; cần xác nhận)</td></tr>
+<tr><td class="k"><span class="msym">[Δ/L]</span></td><td>Giới hạn lún lệch</td><td>0.005</td><td>-</td><td>TCVN 9362:2012 Bảng 16 (độ nghiêng giới hạn ~1/200, sơ bộ)</td></tr>
+<tr><td class="k"><span class="msym">s<sub>u</sub> (sét mềm)</span></td><td>Sức kháng cắt không thoát nước, sét mềm (Lớp 2) <span class="as">[Sơ bộ]</span></td><td>12.0</td><td>kPa</td><td>su sét rất mềm yếu Lớp 2 [Sơ bộ; ~N30/Stroud, dải cắt cánh 8–20 kPa]; xác nhận cắt cánh/UU/CPT — su 8–20</td></tr>
+<tr><td class="k"><span class="msym">s<sub>u,cột</sub></span> </td><td>Sức kháng không thoát nước cột xi măng–đất CDM <span class="as">[Sơ bộ]</span></td><td>150.0</td><td>kPa</td><td>su cột xi măng–đất CDM ~ qu/2 (qu~300 kPa) [Sơ bộ]; xác nhận thí nghiệm đất–xi măng</td></tr>
+<tr><td class="k"><span class="msym">C<sub>v</sub></span></td><td>Hệ số cố kết (phương đứng) <span class="as">[Sơ bộ]</span></td><td>2.0</td><td>m2/yr</td><td>Cv sét mềm ĐBSCL [Sơ bộ; dải 0.5–5 m²/năm]; xác nhận nén cố kết (Taylor/Casagrande) — Cv 0.5–5</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Số mặt thoát nước (đôi/đơn)</td><td>2</td><td>-</td><td>số mặt thoát nước: 2=hai mặt (đệm cát trên + tầng cát Lớp 15 dưới → Hdr=H/2); 1=một mặt</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Mức tăng sức kháng không thoát nước theo ứng suất hữu hiệu cố kết <span class="as">[Sơ bộ]</span></td><td>0.22</td><td>-</td><td>SHANSEP su/σ'v cho sét cố kết thường (Ladd &amp; Foott 1974; dải 0.20–0.25) [Sơ bộ]; xác nhận CIU/DSS — S~0.22</td></tr>
+</table>
+<h3>Sóng &amp; gió</h3><table><tr><th>Ký hiệu</th><th>Ý nghĩa</th><th>Giá trị</th><th>Đơn vị</th><th>Nguồn (tiêu chuẩn + bảng/điều khoản)</th></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Chế độ khí hậu sóng</td><td>0</td><td>-</td><td>Chế độ sóng: 0=trực tiếp (cho Hs/Tp), 1=hồi suy (đà gió+gió)</td></tr>
+<tr><td class="k"><span class="msym">H<sub>s</sub></span></td><td>Chiều cao sóng ý nghĩa <span class="as">[Sơ bộ]</span></td><td>1.50</td><td>m</td><td>Hs bão tạm tính ở mặt biển (cửa sông; Hs đo trong sông 0.02–0.11 — cần xác nhận) [Sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">T<sub>p</sub></span> </td><td>Chu kỳ sóng đỉnh phổ <span class="as">[Sơ bộ]</span></td><td>5.00</td><td>s</td><td>Chu kỳ sóng đỉnh phổ tạm tính (cần xác nhận) [Sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">H<sub>d</sub>/H<sub>s</sub></span></td><td>Hệ số chiều cao sóng thiết kế Hd=hệ số·Hs</td><td>1.80</td><td>-</td><td>Goda Hmax≈1.8·Hs (sóng thiết kế cho ổn định; BC23 phương án Rayleigh ~2.5) [quét tham số]</td></tr>
+<tr><td class="k"><span class="msym">H<sub>b</sub>/d</span> </td><td>Chỉ số sóng vỡ Hb/d</td><td>0.78</td><td>-</td><td>Sóng vỡ giới hạn theo độ sâu Hb≈0.78·d (McCowan/BC23 sóng vỡ ven bờ)</td></tr>
+<tr><td class="k"><span class="msym">β</span> </td><td>Góc tới sóng β (Goda/Sainflou) <span class="as">[Sơ bộ]</span></td><td>0.0</td><td>deg</td><td>Góc tới của sóng (0=trực diện, bất lợi nhất) [Sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Độ dốc bãi trước cho hb (Goda) <span class="as">[Sơ bộ]</span></td><td>0.0</td><td>-</td><td>Độ dốc đáy biển phía trước (tan); phẳng=0 → Goda α2=0 (không khuếch đại sóng vỡ) [Sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">U<sub>10</sub></span> </td><td>Tốc độ gió hồi suy (hindcast) <span class="as">[Sơ bộ]</span></td><td>20.0</td><td>m/s</td><td>Gió ở độ cao 10 m tạm tính cho hồi suy sóng (bão) [Sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">F</span> </td><td>Đà gió hữu hiệu <span class="as">[Sơ bộ]</span></td><td>20000.0</td><td>m</td><td>đà gió = khoảng cách công trình→cửa biển ~20 km [Sơ bộ — cập nhật bằng số liệu thật]</td></tr>
+<tr><td class="k"><span class="msym">γ<sub>f</sub> (sóng)</span></td><td>Hệ số tải trọng sóng</td><td>1.00</td><td>-</td><td>Hệ số tải riêng phần của sóng (tổ hợp đặc biệt; γ_lc=0.90; Hd đã gồm an toàn)</td></tr>
+<tr><td class="k"><span class="msym">V<sub>w</sub></span> </td><td>Tốc độ gió thiết kế ở độ cao 10 m <span class="as">[Sơ bộ]</span></td><td>38.0</td><td>m/s</td><td>Tốc độ gió thiết kế tạm tính, ven biển Mekong (TCVN 2737 vùng gió; gió khi vận hành thường không đáng kể theo BC23 §5.1.2) [Sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">I<sub>u</sub></span> </td><td>Cường độ rối của gió <span class="as">[Sơ bộ]</span></td><td>0.15</td><td>-</td><td>Cường độ rối, ven biển thoáng (NEN 6702 / TCVN 2737) [Sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">C<sub>w</sub></span> </td><td>Hệ số hình dạng/kích thước gió <span class="as">[Sơ bộ]</span></td><td>1.30</td><td>-</td><td>Hệ số dạng gió C_dim·C_index cho hộp tù + lan can (NEN 6702 / TCVN 2737) [Sơ bộ]</td></tr>
+</table>
+<h3>Cửa van</h3><table><tr><th>Ký hiệu</th><th>Ý nghĩa</th><th>Giá trị</th><th>Đơn vị</th><th>Nguồn (tiêu chuẩn + bảng/điều khoản)</th></tr>
+<tr><td class="k"><span class="msym">f<sub>thép</sub></span></td><td>Cường độ tính toán của thép (uốn)</td><td>230000.0</td><td>kPa</td><td>TCVN 5575:2012 (CCT38/SS400, t≤20mm: R=cường độ tính toán f~230 MPa) — CCT38</td></tr>
+<tr><td class="k"><span class="msym">E<sub>s</sub></span></td><td>Mô đun đàn hồi của thép</td><td>2.06e8</td><td>kPa</td><td>TCVN 5575:2012 (E thép kết cấu = 2.06e5 MPa)</td></tr>
+<tr><td class="k"><span class="msym">f<sub>v</sub></span></td><td>Cường độ chịu cắt tính toán của thép</td><td>133000.0</td><td>kPa</td><td>TCVN 5575:2012 (f_v = 0.58·f, cắt)</td></tr>
+<tr><td class="k"><span class="msym">n<sub>q</sub></span></td><td>Hệ số tải áp lực thủy tĩnh khi thiết kế cấu kiện</td><td>1.15</td><td>-</td><td>TCVN 2737 / 5575 (hệ số vượt tải áp lực nước ~1.1–1.2)</td></tr>
+<tr><td class="k"><span class="msym">[δ] = L/spec</span></td><td>Mẫu số độ võng cho phép (nhịp/mẫu số)</td><td>600.0</td><td>-</td><td>USACE EM 1110-2-2105 / Naudascher (độ võng cho phép cửa van ~ L/600–800)</td></tr>
+<tr><td class="k"><span class="msym">n<sub>g</sub></span> </td><td>Số dầm ngang chính mỗi cánh cửa</td><td>12</td><td>-</td><td>số dầm ngang chính mỗi cánh cửa (thiết kế sơ bộ; chia tải bằng nhau)</td></tr>
+<tr><td class="k"><span class="msym">t<sub>bm</sub></span> </td><td>Chiều dày bản mặt</td><td>0.014</td><td>m</td><td>chiều dày bản mặt tối thiểu cho cửa van + dự phòng ăn mòn (~12–16 mm)</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Chiều cao dầm tổ hợp thử = tỉ lệ·nhịp</td><td>0.0667</td><td>-</td><td>tỉ lệ chiều cao dầm thử (nhịp/15) — điểm xuất phát, tăng dần để đạt độ võng — nhịp/15</td></tr>
+<tr><td class="k"><span class="msym">[σ<sub>ép</sub>]</span> </td><td>Ứng suất ép mặt cho phép tại rãnh</td><td>12000.0</td><td>kPa</td><td>TCVN 5574 (áp lực tiếp xúc cho phép bê tông đầu rãnh ~ 0.5–0.6·Rb cục bộ)</td></tr>
+<tr><td class="k"><span class="msym">[δ]<sub>ngưỡng</sub></span></td><td>Mẫu số độ võng cho phép của gối đỡ ngưỡng</td><td>250.0</td><td>-</td><td>độ võng cho phép dầm/bản sàn trung gian (~L/250, kết cấu bê tông sàn) [TCVN 5574 / thực hành] — L/250</td></tr>
+<tr><td class="k"><span class="msym">b<sub>dv</sub></span> </td><td>Bề rộng dầm đỡ van (dọc dòng) <span class="as">[Sơ bộ]</span></td><td>2.0</td><td>m</td><td>bề rộng dầm đỡ van (dọc dòng) tại tuyến cửa — điểm xuất phát thiết kế [Sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">h<sub>dv</sub></span> </td><td>Chiều cao dầm đỡ van (đã khóa)</td><td>2.40</td><td>m</td><td>chiều cao dầm đỡ van — ĐÃ THIẾT KẾ &amp; KHÓA (đạt ρ=1.42%, δ=84mm≤L/250)</td></tr>
+<tr><td class="k"><span class="msym">ρ<sub>dv</sub></span> </td><td>Hàm lượng cốt thép mục tiêu của dầm đỡ van</td><td>0.015</td><td>-</td><td>hàm lượng cốt thép mục tiêu khi định tiết diện dầm đỡ van (≤ ρ_max=3.5%; ~1.5% hợp lý) — ~1.5%</td></tr>
+<tr><td class="k"><span class="msym">h<sub>dv,max</sub></span> </td><td>Giới hạn chiều cao dầm đỡ van <span class="as">[Sơ bộ]</span></td><td>4.0</td><td>m</td><td>giới hạn chiều cao dầm đỡ van (treo dưới sàn, còn trên đỉnh hộp) [Sơ bộ, hình học]</td></tr>
+<tr><td class="k"><span class="msym">St</span></td><td>Số Strouhal tách xoáy <span class="as">[Sơ bộ]</span></td><td>0.20</td><td>-</td><td>Naudascher &amp; Rockwell "Flow-Induced Vibrations" — số Strouhal cạnh tù (St~0.2) [Sơ bộ — cần thí nghiệm mô hình] — St~0.2</td></tr>
+<tr><td class="k"><span class="msym">ζ</span> </td><td>Hệ số cản hệ một bậc tự do <span class="as">[Sơ bộ]</span></td><td>0.02</td><td>-</td><td>hệ số cản của thép ngập nước (kết cấu+thủy động ~1–2%) [Sơ bộ — cần đo hiện trường]</td></tr>
+<tr><td class="k"><span class="msym">[f<sub>ướt</sub>/f<sub>s</sub>]</span></td><td>Tỉ số tách tần số tối thiểu</td><td>1.5</td><td>-</td><td>Naudascher: tách tần số f_n/f_s ≥ 1.5 (tối thiểu để sàng lọc; thiết kế chi tiết hướng tới ≥2–3) — ≥1.5</td></tr>
+<tr><td class="k"><span class="msym">d</span></td><td>Kích thước đặc trưng cạnh đáy d <span class="as">[Sơ bộ]</span></td><td>0.30</td><td>m</td><td>chiều cao cạnh/dầm đáy cửa van (kích thước đặc trưng d cho xoáy) [Sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">C<sub>v</sub></span> </td><td>Hệ số lưu tốc tia dưới cửa</td><td>1.0</td><td>-</td><td>hệ số lưu tốc tia dưới cửa (Cv~1 — bảo toàn năng lượng, thiên an toàn cho tần số kích thích)</td></tr>
+<tr><td class="k"><span class="msym">C<sub>m</sub></span> </td><td>Hệ số khối nước kèm Westergaard</td><td>0.875</td><td>-</td><td>Westergaard (1933) hệ số khối nước kèm pe=(7/8)·ρ·√(H·z) — 7/8</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Bật gói biện pháp giảm rung</td><td>1</td><td>-</td><td>bật tổ hợp biện pháp giảm rung cửa van; 0=hiện trạng (trước biện pháp)</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Tăng cứng: hệ số I_dầm <span class="as">[Sơ bộ]</span></td><td>1.50</td><td>-</td><td>hệ số tăng I_dầm cánh khống chế (thêm gân/dầm dọc → ↑độ cứng uốn quy đổi → ↑f_ướt) [Sơ bộ] — ×1.5</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Tăng cứng: hệ số s_dầm (&lt;1) <span class="as">[Sơ bộ]</span></td><td>0.85</td><td>-</td><td>hệ số giảm khoảng cách dầm s_dầm (dầm dày hơn → ↑độ cứng quy đổi D=EI/s) [Sơ bộ] — ×0.85</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Tăng cứng: hệ số khối lượng cánh (Δthép) <span class="as">[Sơ bộ]</span></td><td>1.18</td><td>-</td><td>hệ số tăng khối lượng cánh do thêm thép làm cứng (≈+18% thép cánh khống chế) [Sơ bộ] — +18%</td></tr>
+<tr><td class="k"><span class="msym">d′</span> </td><td>Kích thước cạnh đáy d sau giảm rung <span class="as">[Sơ bộ]</span></td><td>0.75</td><td>m</td><td>cạnh đáy MỚI d (làm to/sâu cạnh đáy cửa → hạ f_s xuống dưới f_ướt); 0.30→0.75 m để quét nhạy St/d giữ tách ≥1.5 toàn dải (f_ướt·d≥7.2) [Sơ bộ — cần thí nghiệm FIV] — 0.75</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Mục tiêu tách tần số khi thiết kế chi tiết</td><td>2.00</td><td>-</td><td>Naudascher: thiết kế chi tiết hướng tách ≥2–3 (mục tiêu); sàng lọc tối thiểu vẫn 1.5 — ≥2</td></tr>
+<tr><td class="k"><span class="msym">a/H</span> </td><td>Quy tắc vận hành: độ mở duy trì tối thiểu</td><td>0.10</td><td>-</td><td>quy tắc vận hành: tỉ lệ hé mở tối thiểu (a/H) dưới đó CẤM hé kéo dài khi dH cao (tia dưới cộng hưởng khóa) — a/H≥0.10</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Quy tắc vận hành: ngưỡng cột nước cao</td><td>0.85</td><td>-</td><td>quy tắc vận hành: ngưỡng dH cao (= hệ số·dH_max) mà vùng hé-nhỏ bị cấm — 0.85·dH_max</td></tr>
+<tr><td class="k"><span class="msym">t<sub>eq</sub></span> </td><td>Bề dày thép tương đương cửa van (phương án 2 tầng)</td><td>0.134206</td><td>m</td><td>Thép cửa van đã thiết kế: 0.08×(18544.9/11054.6); trước dùng giá trị tạm 0.08</td></tr>
+<tr><td class="k"><span class="msym">t<sub>eq</sub></span> </td><td>Bề dày thép tương đương cửa van (phương án 1 tầng)</td><td>0.117099</td><td>m</td><td>Thép cửa van đã thiết kế: 0.08×(7972.2/5446.5); trước dùng giá trị tạm 0.08</td></tr>
+<tr><td class="k"><span class="msym">t<sub>eq,0</sub></span> </td><td>Bề dày thép tương đương cửa van — giá trị tạm đã thay thế <span class="as">[Sơ bộ]</span></td><td>0.08</td><td>m</td><td>Giá trị tạm cũ (giữ để so sánh trước/sau) [Sơ bộ]</td></tr>
+</table>
+<h3>Lai dắt (towing)</h3><table><tr><th>Ký hiệu</th><th>Ý nghĩa</th><th>Giá trị</th><th>Đơn vị</th><th>Nguồn (tiêu chuẩn + bảng/điều khoản)</th></tr>
+<tr><td class="k"><span class="msym">[GM]</span></td><td>Chiều cao tâm nghiêng tối thiểu (lắc &amp; chúi)</td><td>0.50</td><td>m</td><td>IMO MSC.235(82) / DNV-OS-H101 (GM tối thiểu khi nổi, lắc &amp; chúi)</td></tr>
+<tr><td class="k"><span class="msym">f<sub>b</sub></span> </td><td>Mạn khô tối thiểu (lai dắt, phơi mặc định)</td><td>0.80</td><td>m</td><td>BC 5.1.2 (kín gió 0.5 / có gió 1.0 / ngoài khơi 1.2–1.5)</td></tr>
+<tr><td class="k"><span class="msym">T/H</span> </td><td>Tỉ lệ mớn nước tối đa so với chiều cao thân <span class="as">[Sơ bộ]</span></td><td>0.85</td><td>-</td><td>[Cơ sở: mớn nước tối đa 0.85·H_thân, thực hành lai dắt]</td></tr>
+<tr><td class="k"><span class="msym">[FS]<sub>điểm kéo</sub></span></td><td>Hệ số an toàn sức chịu điểm kéo</td><td>2.0</td><td>-</td><td>Noble Denton 0027/ND / OCIMF (FS sức chịu điểm kéo)</td></tr>
+<tr><td class="k"><span class="msym">[FS]<sub>lật</sub></span> </td><td>Hệ số an toàn chống lật khi nổi (nghiêng ngang)</td><td>1.5</td><td>-</td><td>DNV-OS-H101 (FS chống lật khi nổi, nghiêng ngang)</td></tr>
+<tr><td class="k"><span class="msym">[FS]<sub>trượt</sub></span> </td><td>Hệ số an toàn trượt ngang (nổi/neo) <span class="as">[Sơ bộ]</span></td><td>1.5</td><td>-</td><td>[Cơ sở: FS trượt ngang nổi/neo 1.5, thực hành lai dắt]</td></tr>
+<tr><td class="k"><span class="msym">[θ<sub>tr</sub>]</span> </td><td>Góc chúi dọc tối đa <span class="as">[Sơ bộ]</span></td><td>3.0</td><td>deg</td><td>[Cơ sở: góc nghiêng dọc cho phép 3°, thực hành lai dắt]</td></tr>
+<tr><td class="k"><span class="msym">θ<sub>lắc</sub></span> </td><td>Biên độ lắc động tối đa</td><td>5.0</td><td>deg</td><td>BC 5.1.2 (biên độ lắc < 5°)</td></tr>
+<tr><td class="k"><span class="msym">ΔT</span> </td><td>Tách cộng hưởng |Tn−Tp| tối thiểu <span class="as">[Sơ bộ]</span></td><td>1.5</td><td>s</td><td>[Cơ sở: tách chu kỳ cộng hưởng ≥1.5 s, thực hành lai dắt]</td></tr>
+<tr><td class="k"><span class="msym">DAF</span></td><td>Hệ số khuếch đại động (lực kéo)</td><td>1.2</td><td>-</td><td>Noble Denton (khuếch đại động)</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Dự trữ công suất bơm so với lưu lượng rò <span class="as">[Sơ bộ]</span></td><td>1.2</td><td>-</td><td>[Cơ sở: dự trữ bơm 1.2× lưu lượng rò, thực hành lai dắt]</td></tr>
+<tr><td class="k"><span class="msym">c<sub>k</sub></span> </td><td>k = ck·B cho chu kỳ lắc riêng <span class="as">[Sơ bộ]</span></td><td>0.38</td><td>-</td><td>[Cơ sở: hệ số bán kính quán tính k=0.38·B, thực hành lai dắt]</td></tr>
+<tr><td class="k"><span class="msym">C<sub>J</sub></span> </td><td>Tn_J = C·√(B/√(GM))</td><td>0.80</td><td>-</td><td>Hệ số chu kỳ riêng thực nghiệm Jacobsen</td></tr>
+<tr><td class="k"><span class="msym">V<sub>w</sub></span> </td><td>Tốc độ gió thiết kế</td><td>12.0</td><td>m/s</td><td>BC 5.1.2 gió khi lai dắt (Beaufort 5–6)</td></tr>
+<tr><td class="k"><span class="msym">C<sub>d,w</sub></span> </td><td>Hệ số cản gió</td><td>1.2</td><td>-</td><td>DNV (vật thể tù)</td></tr>
+<tr><td class="k"><span class="msym">U<sub>c</sub></span> </td><td>Tốc độ lai dắt/dòng chảy</td><td>1.5</td><td>m/s</td><td>BC 5.1.2 dòng chảy khi lai dắt</td></tr>
+<tr><td class="k"><span class="msym">C<sub>d,c</sub></span> </td><td>Hệ số cản dòng chảy</td><td>1.0</td><td>-</td><td>DNV</td></tr>
+<tr><td class="k"><span class="msym">H<sub>s</sub></span> </td><td>Chiều cao sóng ý nghĩa</td><td>2.0</td><td>m</td><td>BC 5.1.2 trạng thái biển thiết kế</td></tr>
+<tr><td class="k"><span class="msym">T<sub>p</sub></span> </td><td>Chu kỳ sóng đỉnh phổ</td><td>5.0</td><td>s</td><td>BC 5.1.2 trạng thái biển thiết kế</td></tr>
+<tr><td class="k"><span class="msym">μ<sub>giữ</sub></span> </td><td>Ma sát giữ (trượt ngang) <span class="as">[Sơ bộ]</span></td><td>0.5</td><td>-</td><td>[Cơ sở: ma sát neo/giữ tạm thời 0.5, thực hành lai dắt]</td></tr>
+<tr><td class="k"><span class="msym">n<sub>kéo</sub></span></td><td>Số điểm kéo <span class="as">[Sơ bộ]</span></td><td>4</td><td>-</td><td>[Cơ sở: bố trí 4 điểm kéo, thực hành lai dắt]</td></tr>
+<tr><td class="k"><span class="msym">P<sub>bollard</sub></span></td><td>Sức chịu của điểm kéo <span class="as">[Sơ bộ]</span></td><td>5000.0</td><td>kN</td><td>[Cơ sở: sức kéo bích tàu 5000 kN/điểm, thực hành]</td></tr>
+<tr><td class="k"><span class="msym">Q<sub>bơm</sub></span> </td><td>Lưu lượng bơm lắp đặt <span class="as">[Sơ bộ]</span></td><td>0.10</td><td>m3/s</td><td>[Cơ sở: công suất bơm lắp đặt 0.10 m3/s, thực hành]</td></tr>
+<tr><td class="k"><span class="msym">Q<sub>rò</sub></span> </td><td>Lưu lượng nước rò vào <span class="as">[Sơ bộ]</span></td><td>0.05</td><td>m3/s</td><td>[Cơ sở: lưu lượng rò ước tính 0.05 m3/s, thực hành]</td></tr>
+<tr><td class="k"><span class="msym">t<sub>r</sub></span> </td><td>Thời gian ứng phó ngập sự cố <span class="as">[Sơ bộ]</span></td><td>600.0</td><td>s</td><td>[Cơ sở: thời gian ứng phó sự cố 10 phút, thực hành]</td></tr>
+<tr><td class="k"><span class="msym">ρ<sub>kk</sub></span> </td><td>Lực gió</td><td>1.225</td><td>kg/m3</td><td>Khối lượng riêng không khí tiêu chuẩn</td></tr>
+</table>
+<h3>Đánh chìm (immersion)</h3><table><tr><th>Ký hiệu</th><th>Ý nghĩa</th><th>Giá trị</th><th>Đơn vị</th><th>Nguồn (tiêu chuẩn + bảng/điều khoản)</th></tr>
+<tr><td class="k"><span class="msym">[GM]<sub>chìm</sub></span></td><td>Chiều cao tâm nghiêng tối thiểu trong quá trình đánh chìm</td><td>1.0</td><td>m</td><td>PIANC WG nr.7 / hướng dẫn hầm dìm (GM≥0.5–1.0 m tại thời điểm chìm tới hạn; thiên an toàn so với lai dắt 0.5) — ≥1.0</td></tr>
+<tr><td class="k"><span class="msym">[v]<sub>hạ</sub></span></td><td>Tốc độ hạ chìm cho phép</td><td>0.30</td><td>m/min</td><td>tốc độ hạ chìm có kiểm soát (thực hành hầm dìm ~0.1–0.5 m/phút)</td></tr>
+<tr><td class="k"><span class="msym">[v<sub>chạm</sub>]</span> </td><td>Tốc độ chạm đáy cho phép</td><td>0.05</td><td>m/min</td><td>tốc độ chạm đáy (tiếp cận cuối chậm; gioăng đập tàu thủy giới hạn trên 3 cm/s)</td></tr>
+<tr><td class="k"><span class="msym">[nghiêng]<sub>ngồi</sub></span></td><td>Độ nghiêng khi ngồi cho phép</td><td>0.005</td><td>-</td><td>TCVN 9362:2012 (độ nghiêng cho phép 1/200) — 1/200</td></tr>
+<tr><td class="k"><span class="msym">δ<sub>nền</sub></span> </td><td>Dung sai độ phẳng nền</td><td>0.05</td><td>m</td><td>nền CDM đã chuẩn bị + dung sai độ phẳng lớp san (~±50 mm trên toàn mặt bằng)</td></tr>
+<tr><td class="k"><span class="msym">U<sub>đv</sub></span> </td><td>Tốc độ dòng chảy khi định vị</td><td>0.50</td><td>m/s</td><td>dòng chảy trong cửa sổ lặng khi đặt (điều kiện nước đứng, < lai dắt 1.5)</td></tr>
+<tr><td class="k"><span class="msym">C<sub>d,c</sub></span> </td><td>Hệ số cản dòng chảy</td><td>1.0</td><td>-</td><td>DNV (vật thể tù, hứng ngang)</td></tr>
+<tr><td class="k"><span class="msym">[FS]<sub>đặt</sub></span> </td><td>Hệ số an toàn trượt khi đặt</td><td>1.5</td><td>-</td><td>FS trượt khi định vị tạm (trước khi dằn/bơm vữa đầy)</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Số bước rời rạc hóa quá trình hạ</td><td>20</td><td>-</td><td>số bước bơm dằn trong trình tự đánh chìm</td></tr>
+</table>
+
+<h3>Khác</h3><table><tr><th>Ký hiệu</th><th>Ý nghĩa</th><th>Giá trị</th><th>Đơn vị</th><th>Nguồn (tiêu chuẩn + bảng/điều khoản)</th></tr>
+<tr><td class="k"><span class="msym">[σ]</span></td><td>Nền yếu sau khi bóc bùn <span class="as">[Sơ bộ]</span></td><td>40.0</td><td>kPa</td><td>[Cơ sở: nền yếu sau bóc bùn ~40 kPa, sơ bộ]</td></tr>
+<tr><td class="k"><span class="msym">t<sub>tc</sub></span> </td><td>Thời gian từ đặt tải đến vận hành <span class="as">[Sơ bộ]</span></td><td>1.0</td><td>yr</td><td>thời gian từ đặt tải (đánh chìm+dằn) đến VẬN HÀNH [Sơ bộ]; xác nhận tiến độ thi công</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Tỉ số hình dạng phần tử tối đa (kiểm chất lượng lưới FE) <span class="as">[Sơ bộ]</span></td><td>3.0</td><td>-</td><td>[Cơ sở: hướng dẫn tỉ số hình dạng NAFEMS; lưới sản xuất tối đa 1.77 → biên rộng]</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Góc trong nhỏ nhất (kiểm chất lượng lưới FE) <span class="as">[Sơ bộ]</span></td><td>15.0</td><td>deg</td><td>[Cơ sở: ngưỡng phần tử dẹt ~15°; lưới sản xuất góc nhỏ nhất 34–39 → biên rộng]</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Góc xiên tối đa (lưới tứ giác/khối; khuyến nghị) <span class="as">[Sơ bộ]</span></td><td>45.0</td><td>deg</td><td>[Cơ sở: góc xiên tứ giác/khối ≤45°; phần tử tam giác xiên=0, khuyến nghị]</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Jacobian chuẩn hóa nhỏ nhất (lưới tứ giác/khối; khuyến nghị) <span class="as">[Sơ bộ]</span></td><td>0.2</td><td>-</td><td>[Cơ sở: Jacobian>0 điều kiện không suy biến; phần tử tuyến tính J hằng>0, khuyến nghị]</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Biến thiên đại lượng quan tâm tối đa: lưới sản xuất so với lưới mịn nhất (kiểm hội tụ) <span class="as">[Sơ bộ]</span></td><td>0.03</td><td>-</td><td>[Cơ sở: hội tụ lưới sản xuất <3% (kiểm chứng hội tụ lưới, h-convergence)]</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Mức cảnh báo GCI (khuyến nghị, không phải ngưỡng cứng) <span class="as">[Sơ bộ]</span></td><td>0.05</td><td>-</td><td>[Cơ sở: GCI mục tiêu 5% (Roache); KHUYẾN NGHỊ — p=0.5 làm GCI bị thổi phồng]</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Dung sai tổng hợp lực khi đặt tải <span class="as">[Sơ bộ]</span></td><td>0.02</td><td>-</td><td>[Cơ sở: đặt tải — tổng hợp lực nút FE so với tích phân p ≤2% (đối chiếu patch-test 0.5–2%)]</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Dung sai trọng tâm (đường tác dụng) khi đặt tải <span class="as">[Sơ bộ]</span></td><td>0.05</td><td>-</td><td>[Cơ sở: đặt tải — điểm đặt (trọng tâm ∫(p·z)/∫p) ≤5% chống lỗi tam giác→đều]</td></tr>
+<tr><td class="k"><span class="msym">—</span> </td><td>Mức cảnh báo chênh ứng suất giữa các phần tử (bản đồ sai số) <span class="as">[Sơ bộ]</span></td><td>0.20</td><td>-</td><td>[Cơ sở: chênh ứng suất giữa các phần tử chuẩn hóa >20% = vùng cần làm mịn (Zienkiewicz–Zhu giản lược)]</td></tr>
+</table>
+<h2 id="standards">③ Tiêu chuẩn &amp; quy phạm áp dụng</h2><div class="box"><code>Brinch-Hansen</code> · <code>DNV</code> · <code>DNV-OS-H101</code> · <code>IMO MSC.235</code> · <code>Lane (1935)</code> · <code>NEN 6702</code> · <code>Naudascher &amp; Rockwell &quot;Flow-Induced Vibrations&quot; — số Strouhal cạnh tù</code> · <code>Naudascher: tách tần số f_n/f_s ≥ 1.5</code> · <code>Naudascher: thiết kế chi tiết hướng tách ≥2–3</code> · <code>Noble Denton</code> · <code>Noble Denton 0027/ND / OCIMF</code> · <code>PIANC WG nr.7 / immersed-tunnel guidance</code> · <code>QCVN 04-05:2022</code> · <code>Schoklitsch</code> · <code>TCVN 2737</code> · <code>TCVN 2737:2023</code> · <code>TCVN 4253</code> · <code>TCVN 4253:2012</code> · <code>TCVN 5574</code> · <code>TCVN 5574:2018</code> · <code>TCVN 5575:2012</code> · <code>TCVN 9362:2012</code> · <code>TCVN 9386:2012</code> · <code>TCVN 9901:2023</code> · <code>Terzaghi</code> · <code>USACE EM 1110-2-2105 / Naudascher</code> · <code>Westergaard</code></div>
+<h2 id="theory">④ Lý thuyết theo hạng mục</h2><table><tr><th>Hạng mục</th><th>Phương pháp / lý thuyết</th><th>Tiêu chuẩn</th><th>Phương pháp · Công thức</th></tr>
+<tr><td>Hình học &amp; mặt cắt công trình</td><td>tham số hoá hình học theo sáng chế ĐHC</td><td>Sáng chế ĐHC + số liệu thiết kế Hàm Luông</td><td>—</td></tr>
+<tr><td>Ổn định nổi (lai dắt)</td><td>ổn định nổi Archimedes + chiều cao tâm nghiêng GM=KB+BM−KG</td><td>IMO MSC.235(82) / DNV-OS-H101</td><td><code>K_nổi = W_đẩy/G ≥ [K]; GM = KB + BM − KG ≥ [GM]</code></td></tr>
+<tr><td>Ổn định — trượt phẳng</td><td>cân bằng giới hạn TRƯỢT phẳng (ma sát Coulomb f=β·N)</td><td>TCVN 4253:2012 (kₙ=1.25, K≥1.0)</td><td><code>K_trượt = β·N / (kₙ·γ_lc·ΣH) ≥ [K]</code></td></tr>
+<tr><td>Ổn định — lật quanh điểm A</td><td>cân bằng mô-men LẬT quanh điểm toe A (ΣM_giữ/ΣM_lật)</td><td>TCVN 4253:2012</td><td><code>K_lật = ΣM_giữ / (kₙ·γ_lc·ΣM_lật) ≥ [K]</code></td></tr>
+<tr><td>Ổn định — lệch tâm &amp; ứng suất đáy</td><td>lệch tâm e≤L/6 + ứng suất đáy phân bố hình thang</td><td>TCVN 4253:2012</td><td><code>e = M_net/N ≤ L/6; σ_max,min = N/(B·L)·(1 ± 6e/L) ≤ [σ]</code></td></tr>
+<tr><td>Địa kỹ thuật — sức chịu tải nền</td><td>sức chịu tải nền Brinch–Hansen (Nc/Nq/Nγ) + Skempton không thoát nước</td><td>TCVN 9362 / Brinch-Hansen</td><td><code>FS = q_ult/q_app; q_ult = c·Nc·sc·dc + γ·D·Nq + 0.5·γ·B′·Nγ (Brinch–Hansen) ≥ [FS]</code></td></tr>
+<tr><td>Địa kỹ thuật — lún &amp; lún lệch</td><td>lún tức thời đàn hồi + cố kết Terzaghi (áp lực nền NET)</td><td>TCVN 9362 / Terzaghi</td><td><code>S = S_tức + Σ (Cc/(1+e0))·H·log((σ0+Δσ)/σ0) ≤ [S]</code></td></tr>
+<tr><td>Địa kỹ thuật — tương tác kết cấu–nền (SSI)</td><td>tương tác kết cấu–nền (nền Winkler / continuum FE)</td><td>DNV + FEM</td><td><code>Winkler/continuum FE → S, σ_tiếp_xúc (cân bằng phản lực nền)</code></td></tr>
+<tr><td>Thấm — gradient &amp; xói ngầm</td><td>đường viền thấm Bligh/Lane + gradient thoát (lưới dòng FE)</td><td>TCVN 4253 / Bligh–Lane</td><td><code>i_thoát = dH/L_creep ≤ [i] = i_cr/FS (Bligh/Lane)</code></td></tr>
+<tr><td>Xói lòng dẫn &amp; bảo vệ</td><td>xói cục bộ + lớp bảo vệ đá hộc (Schoklitsch)</td><td>TCVN / Schoklitsch</td><td><code>d_xói = K·q^0.57 / d90^0.32; d50 bảo vệ; FS</code></td></tr>
+<tr><td>Kết cấu — đối soát tải FEM</td><td>đối soát tải đưa vào FEM khớp hệ lực thiết kế (cân bằng khép kín)</td><td>—</td><td>—</td></tr>
+<tr><td>Kết cấu — vỏ hộp (shell 3D)</td><td>vỏ hộp shell 3D (Kirchhoff–Mindlin) FE + bao thép Wood–Armer</td><td>DNV + StaBIL FEM</td><td><code>M_Wood–Armer (shell) → As = M/(R_s·0.9·d); σ ≤ R_b; ρ ≤ [ρ]</code></td></tr>
+<tr><td>Kết cấu — bản đáy dầm dọc dòng</td><td>bản đáy/dầm dọc trên nền Winkler</td><td>TCVN 5574 + Winkler</td><td><code>M,V (dầm Winkler) → As = M/(R_s·0.9·d); ρ ≤ [ρ]</code></td></tr>
+<tr><td>Kết cấu — khung ngang</td><td>khung ngang trên nền Winkler</td><td>TCVN 5574 + Winkler</td><td><code>M,V khung ngang → As = M/(R_s·0.9·d); ρ ≤ [ρ]</code></td></tr>
+<tr><td>Kết cấu — sàn giữa (lưới dầm)</td><td>lưới dầm sàn giữa (hệ thanh StaBIL)</td><td>TCVN 5574 + StaBIL</td><td><code>lưới dầm sàn → M,V → As; ρ ≤ [ρ]</code></td></tr>
+<tr><td>Kết cấu — hệ cột đỡ sàn</td><td>hệ cột đỡ sàn (thanh chịu nén-uốn)</td><td>TCVN 5574 + StaBIL</td><td><code>cột nén-uốn → kiểm σ ≤ R_b, As</code></td></tr>
+<tr><td>Kết cấu — trụ pin</td><td>trụ pin (hộp 2D nội lực)</td><td>TCVN 5574</td><td><code>trụ pin (hộp 2D) → σ, As</code></td></tr>
+<tr><td>Kết cấu — tấm phai (làm nổi)</td><td>tấm phai/làm nổi (bản chịu áp lực nước)</td><td>DNV</td><td><code>bản tấm phai chịu áp lực nước → M → As</code></td></tr>
+<tr><td>Cửa van — thép &amp; độ võng</td><td>cửa van phẳng — dầm/bản thép + độ võng cho phép</td><td>TCVN 8299 + thép kết cấu</td><td><code>σ = M/W ≤ f_thép; δ = 5qL⁴/(384·E·I) ≤ L/spec</code></td></tr>
+<tr><td>Cửa van — rung động (FIV)</td><td>rung động cảm ứng dòng (FIV) — tách tần số riêng khỏi f_s=St·V/d</td><td>DNV / Naudascher</td><td><code>f_s = St·V/d; tách = f_ướt/f_s ≥ [1.5]</code></td></tr>
+<tr><td>Cửa van — đỡ ngưỡng (2 tầng)</td><td>đỡ ngưỡng van + đường truyền lực dầm→trụ→bản đáy→nền</td><td>TCVN 5574</td><td><code>R_ngưỡng → M=qL²/8; As=M/(R_s·0.9·d); ρ ≤ [ρ]; δ ≤ L/spec</code></td></tr>
+<tr><td>Thi công — lai dắt/nổi</td><td>lai dắt/nổi 15 kiểm tra (mớn/GM/lực kéo, drag thân tù hướng-nhạy)</td><td>BC 5.1.2 / DNV-OS-H101 / Noble Denton</td><td><code>F_kéo = (F_gió+F_dòng)·DAF; FS = Σ_bollard / F_kéo ≥ [FS]</code></td></tr>
+<tr><td>Thi công — đánh chìm</td><td>đánh chìm có kiểm soát (GM qua chìm, tốc độ hạ, tư thế ngồi)</td><td>DNV-OS-H101</td><td><code>GM_chìm ≥ [GM]; v_hạ ≤ [v]; nghiêng_ngồi ≤ [tilt]</code></td></tr>
+<tr><td>Khung an toàn &amp; tổ hợp tải</td><td>khung an toàn TCVN: tổ hợp tải kₙ·γ_lc·γ_f</td><td>TCVN 4253:2012</td><td><code>N_tt = Σ γ_f·N; K = m·R / (kₙ·γ_lc·N_tt) ≥ 1.0</code></td></tr>
+<tr><td>Tải trọng sóng &amp; gió</td><td>tải sóng Sainflou (đứng) / Goda (vỡ) + gió</td><td>TCVN 8421 / Goda / Sainflou</td><td><code>p_sóng = Sainflou(đứng)/Goda(vỡ), Hd = hệ số·Hs; +gió</code></td></tr>
+<tr><td>Tổng hợp &amp; quét thiết kế</td><td>tổng hợp kết quả / quét không gian thiết kế (surrogate)</td><td>—</td><td>—</td></tr>
+</table>
+<h2 id="results">⑤ Kết quả then chốt (cấu hình thiết kế 2 tầng)</h2><div class="box"><table><tr><th>Kiểm tra</th><th>Trị các trường hợp</th></tr>
+<tr><td>Lật (chống lật)</td><td>ĐẠT (1.24) · ĐẠT (1.29) · ĐẠT (1.25) · ĐẠT (1.43) · ĐẠT (1.56)</td></tr>
+<tr><td>Trượt (chống trượt)</td><td>ĐẠT (2.35) · ĐẠT (1.68) · ĐẠT (1.17) · ĐẠT (4.98) · ĐẠT (∞)</td></tr>
+<tr><td>Sức chịu tải (nền)</td><td>ĐẠT (27.9) · ĐẠT (17.8) · ĐẠT (11.8) · ĐẠT (23.9) · ĐẠT (33.2)</td></tr>
+<tr><td>Lún</td><td>ĐẠT (159mm) · ĐẠT (159mm) · ĐẠT (159mm) · ĐẠT (159mm) · ĐẠT (159mm)</td></tr>
+<tr><td>Thấm/xói ngầm</td><td>ĐẠT (i=0.099) · ĐẠT (i=0.099) · ĐẠT (i=0.099) · ĐẠT (i=0.099) · ĐẠT (i=0.099)</td></tr>
+<tr><td>Ổn định nổi</td><td></td></tr>
+<tr><td>Cửa van: thép + rung động</td><td>ĐẠT (thép ĐẠT; tách=3.33) · ĐẠT (thép ĐẠT; tách=3.33) · ĐẠT (thép ĐẠT; tách=3.33) · ĐẠT (thép ĐẠT; tách=3.33) · ĐẠT (thép ĐẠT; tách=3.33)</td></tr>
+</table><div class="sub">Chi tiết: HỒ SƠ KIỂM TRA (33 ĐẠT / 0 KHÔNG ĐẠT / 36 hạng mục).</div></div>
+<footer>Hồ sơ cơ sở thiết kế — Đề tài ĐTDL.CN-51/23 · Trường Đại học Thủy Lợi. Bản trình bày phục vụ giới thiệu công nghệ; số liệu chi tiết liên hệ chủ nhiệm đề tài.</footer>
+<script>document.querySelectorAll(".fb").forEach(function(b){b.addEventListener("click",function(ev){var id=this.getAttribute("href");if(!id||id[0]!=="#")return;ev.preventDefault;var t=document.querySelector(id);if(!t)return;t.scrollIntoView({behavior:"smooth",block:"start"});t.classList.remove("flash");void t.offsetWidth;t.classList.add("flash");history.replaceState(null,"",id);});});</script>
+</div></body></html>
