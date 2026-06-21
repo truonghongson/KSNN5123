@@ -3415,6 +3415,74 @@ a[href="../index.html"]{display:none!important}
   addEventListener('load',function(){setTimeout(build,900);});
 })();
 </script>
+
+<style id="touchCss">
+#touchCtl{position:fixed;right:8px;top:50%;transform:translateY(-50%);z-index:40;
+  display:flex;flex-direction:column;gap:6px;align-items:center}
+#touchCtl button{width:42px;height:42px;border-radius:10px;border:1px solid #2b3340;
+  background:#161b22e6;color:#e6edf3;font-size:17px;cursor:pointer;-webkit-backdrop-filter:blur(6px);
+  backdrop-filter:blur(6px);box-shadow:0 4px 14px #0008;line-height:1;touch-action:none}
+#touchCtl button:hover,#touchCtl button:active{border-color:#4aa3ff;background:#1f2733}
+#touchCtl .vrow{display:flex;gap:6px}
+@media(max-width:760px){
+  #partPanel{left:6px;top:50px;width:152px;max-height:40vh}
+  #partPanel h3{font-size:10px;padding:7px 9px}
+  .pItem{font-size:10px;padding:4px 7px;line-height:1.3}
+  #dockL{transform:scale(.82);transform-origin:top left}
+  #dockR{font-size:10px;max-width:46vw}
+  #touchCtl button{width:46px;height:46px;font-size:19px}
+}
+</style>
+<script id="touchJs">
+(function(){
+  function rot(d){try{orbit.free=true;orbit.fYaw+=d;}catch(e){}}
+  function pit(v){try{orbit.free=true;orbit.fPitch=Math.max(0.06,Math.min(1.35,v));}catch(e){}}
+  function iso(){try{orbit.free=true;orbit.fYaw=0.8;orbit.fPitch=0.40;}catch(e){}}
+  function add(){
+    if(document.getElementById('touchCtl'))return;
+    if(typeof orbit==='undefined')return setTimeout(add,300);
+    var C=document.createElement('div');C.id='touchCtl';
+    C.innerHTML='<button title="Nhìn từ trên" data-a="top">⤒</button>'+
+      '<div class="vrow"><button title="Xoay trái (giữ để xoay)" data-a="left">◀</button>'+
+      '<button title="Xoay phải (giữ để xoay)" data-a="right">▶</button></div>'+
+      '<button title="Góc chéo" data-a="iso">⬔</button>'+
+      '<button title="Nhìn ngang" data-a="low">▭</button>';
+    document.body.appendChild(C);
+    function hold(btn,d){var iv=null;
+      btn.addEventListener('pointerdown',function(e){e.preventDefault();rot(d);
+        iv=setInterval(function(){rot(d);},55);});
+      ['pointerup','pointerleave','pointercancel'].forEach(function(ev){
+        btn.addEventListener(ev,function(){if(iv){clearInterval(iv);iv=null;}});});}
+    C.querySelectorAll('button').forEach(function(b){var a=b.dataset.a;
+      if(a==='left')hold(b,-0.05); else if(a==='right')hold(b,0.05);
+      else b.addEventListener('click',function(){if(a==='top')pit(1.28);else if(a==='low')pit(0.12);else iso();});});
+    if(innerWidth<=760){var pp=document.getElementById('partPanel');
+      if(pp){pp.classList.add('col');var t=document.getElementById('pTgl');if(t)t.textContent='▸';}}
+  }
+  addEventListener('load',function(){setTimeout(add,1000);});
+})();
+</script>
+
+<style id="collapseCss">
+#stageCard.min #stName,#stageCard.min #stDesc{display:none!important}
+#stageCard .num,.dock .panel>h3,.dock .gHead{cursor:pointer;pointer-events:auto!important}
+</style>
+<script id="collapseJs">
+(function(){
+  function wire(){
+    var heads=document.querySelectorAll('#stageCard .num, .dock .panel>h3, .dock .gHead');
+    heads.forEach(function(head){
+      if(head.dataset.cw)return; head.dataset.cw='1';
+      head.addEventListener('click',function(){
+        var panel=head.closest('.panel');
+        if(panel && panel.id!=='partPanel') panel.classList.toggle('min');
+      });
+    });
+    setTimeout(wire,1500); // bắt cả thẻ xuất hiện sau (vd bảng lực)
+  }
+  addEventListener('load',function(){setTimeout(wire,800);});
+})();
+</script>
 </body>
 </html>
                                                                                                                                                                                                                                                                                                                                                                                                                                                     
