@@ -1,0 +1,3420 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đập Hộp Chìm Hàm Luông — Mô phỏng 3D (BIM &amp; Digital Twin)</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#0a1622;
+    font-family:'Segoe UI', Roboto, Arial, sans-serif; }
+  #c { display:block; width:100%; height:100%; }
+  .panel { background:rgba(8,18,30,.74); backdrop-filter:blur(9px);
+    border:1px solid rgba(120,190,255,.22); border-radius:12px;
+    box-shadow:0 6px 24px rgba(0,0,0,.4); color:#eaf4ff; }
+
+  #title { position:absolute; top:12px; left:16px; color:#fff; pointer-events:none;
+    text-shadow:0 2px 8px rgba(0,0,0,.65); }
+  #title h1 { font-size:18px; font-weight:600; letter-spacing:.3px; }
+  #title p { font-size:11.5px; opacity:.85; margin-top:2px; }
+
+  #modeBar { position:absolute; top:12px; left:50%; transform:translateX(-50%);
+    display:flex; padding:4px; gap:4px; }
+  .mode { font-size:13px; padding:7px 16px; border-radius:8px; cursor:pointer;
+    color:#cfe6ff; user-select:none; transition:all .2s; white-space:nowrap; }
+  .mode:hover { background:rgba(120,190,255,.15); }
+  .mode.on { background:#1d7fd4; color:#fff; box-shadow:0 0 10px rgba(60,160,255,.5); }
+
+  #stageCard { position:absolute; top:12px; right:14px; width:312px; max-width:44vw;
+    padding:12px 14px; pointer-events:none; }
+  #stageCard .num { font-size:10.5px; color:#7fd0ff; letter-spacing:1.4px; text-transform:uppercase; }
+  #stageCard h2 { font-size:15.5px; margin:3px 0 6px; font-weight:600; }
+  #stageCard p { font-size:12.3px; line-height:1.5; opacity:.92; }
+
+  #gauges { position:absolute; left:16px; bottom:104px; width:240px; padding:11px 13px; display:none; }
+  #lvlChart { width:100%; border-radius:6px; background:rgba(255,255,255,.045);
+    margin-bottom:8px; display:block; }
+  #gauges .gRow, #gauges #gGate { font-size:12.6px; }
+  .gHead { display:flex; align-items:center; gap:6px; margin-bottom:8px; }
+  .gHead h3 { margin:0 !important; flex:1; }
+  .zbtn { width:26px; height:22px; border-radius:6px; cursor:pointer; text-align:center;
+    line-height:22px; font-size:11px; background:rgba(255,255,255,.1);
+    border:1px solid rgba(255,255,255,.18); user-select:none; }
+  .zbtn:hover { background:rgba(120,190,255,.25); }
+  #alarm { display:none; margin:0 0 8px; padding:6px 9px; border-radius:8px;
+    font-size:12.4px; font-weight:600; text-align:center; letter-spacing:.3px; }
+  #alarm.a1 { display:block; background:rgba(217,165,20,.22); border:1px solid #d9a514; color:#ffd34d; }
+  #alarm.a2 { display:block; background:rgba(208,122,42,.28); border:1px solid #d07a2a; color:#ffb060; }
+  #alarm.a3 { display:block; background:rgba(214,64,42,.35); border:1px solid #ff6a50;
+    color:#ff9c8a; animation:blink .9s infinite; }
+  @keyframes blink { 50% { opacity:.4; } }
+  #envRow { display:flex; align-items:center; gap:10px; margin:4px 0 8px; }
+  #envCv { flex:0 0 auto; }
+  #envTxt { flex:1; font-size:12.4px; line-height:1.75; }
+  #envTxt b { color:#9bd4ff; }
+  #gauges h3 { font-size:11px; color:#7fd0ff; letter-spacing:1.2px; margin-bottom:8px; text-transform:uppercase; }
+  .gRow { display:flex; align-items:center; gap:8px; margin-bottom:7px; font-size:12px; }
+  .gLab { width:74px; opacity:.85; }
+  .gBarWrap { flex:1; height:10px; background:rgba(255,255,255,.1); border-radius:5px; overflow:hidden; }
+  .gBar { height:100%; width:50%; border-radius:5px; transition:none; }
+  #gSea .gBar { background:linear-gradient(90deg,#1d6e7e,#3fb3c8); }
+  #gRiver .gBar { background:linear-gradient(90deg,#6e6a35,#b3a23f); }
+  .gVal { width:58px; text-align:right; font-variant-numeric:tabular-nums; font-size:12px; }
+  #gGate { margin-top:4px; font-size:12.2px; }
+  #gGate b { color:#ffd34d; }
+
+  #bar { position:absolute; left:50%; bottom:12px; transform:translateX(-50%);
+    width:min(1020px, 96vw); padding:9px 13px;
+    display:flex; flex-direction:column; gap:8px; }
+  #chips { display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
+  .chip { flex:1 1 auto; min-width:70px; text-align:center; font-size:11.8px;
+    padding:7px 7px; border-radius:8px; cursor:pointer;
+    background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
+    color:#cfe6ff; transition:all .2s; user-select:none; white-space:nowrap; }
+  .chip:hover { background:rgba(120,190,255,.18); }
+  .chip.on { background:#1d7fd4; border-color:#5db9ff; color:#fff;
+    box-shadow:0 0 10px rgba(60,160,255,.45); }
+  #row2 { display:flex; align-items:center; gap:10px; }
+  #playBtn { width:36px; height:36px; border-radius:50%; border:none; cursor:pointer;
+    background:#1d7fd4; color:#fff; font-size:14px; flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center; }
+  #playBtn:hover { background:#2b95ef; }
+  #seek { flex:1; -webkit-appearance:none; appearance:none; height:6px; border-radius:3px;
+    background:rgba(255,255,255,.18); cursor:pointer; outline:none; }
+  #seek::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px;
+    border-radius:50%; background:#5db9ff; box-shadow:0 0 8px rgba(93,185,255,.8); }
+  #clock { font-size:11px; opacity:.8; width:72px; text-align:right; flex:0 0 auto;
+    font-variant-numeric:tabular-nums; }
+  #xRow { display:none; gap:6px; align-items:center; flex-wrap:wrap; }
+  .xBtn { font-size:12px; padding:7px 12px; border-radius:8px; cursor:pointer;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:#dfeeff; user-select:none; }
+  .xBtn:hover { background:rgba(120,190,255,.2); }
+  .xBtn.on { background:#9a6a14; border-color:#ffc14d; }
+  #forceLegend { position:absolute; left:16px; top:120px; width:285px; max-height:62vh;
+    overflow-y:auto; padding:11px 13px; display:none; font-size:11.8px; }
+  #forceLegend h3 { font-size:11px; color:#ffd34d; letter-spacing:1px; margin-bottom:7px; text-transform:uppercase; }
+  #forceLegend table { width:100%; border-collapse:collapse; }
+  #forceLegend td { padding:2.5px 3px; border-bottom:1px solid rgba(255,255,255,.07); vertical-align:top; }
+  #forceLegend td.v { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  #forceLegend .dot { display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:5px; }
+  #forceLegend .sum { margin-top:7px; padding-top:6px; border-top:1px solid rgba(255,211,77,.4);
+    font-size:11.5px; line-height:1.55; }
+  .xLab { font-size:10.5px; letter-spacing:.8px; text-transform:uppercase; opacity:.55;
+    padding:0 2px 0 8px; user-select:none; }
+  .xSel { background:#13283d; color:#dfeeff; border:1px solid rgba(255,255,255,.2);
+    border-radius:8px; padding:6px 9px; font-size:12px; outline:none; cursor:pointer; }
+  .xSel option { background:#0d1d2e; }
+  /* DT0: panel số liệu MATLAB (dhc_data.json) — nằm trong dock trái, mặc định gập */
+  #dtPanel { padding:9px 12px; font-size:11.6px; }
+  #dtPanel h3 { font-size:10.5px; color:#8ef0c0; letter-spacing:1.1px; margin-bottom:5px; text-transform:uppercase; cursor:pointer; }
+  #dtPanel table { width:100%; border-collapse:collapse; }
+  #dtPanel td { padding:2px 3px; border-bottom:1px solid rgba(255,255,255,.06); }
+  #dtPanel td.v { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  #dtPanel .ok { color:#7dff9e; font-weight:600; } #dtPanel .bad { color:#ff7d7d; font-weight:600; }
+  #dtPanel .src { margin-top:5px; font-size:10px; opacity:.55; line-height:1.45; }
+  #dtPanel.min table, #dtPanel.min .src { display:none; }
+  #impact { position:absolute; right:14px; bottom:16px; width:286px; padding:11px 13px; display:none; }
+  #impact h3 { font-size:11px; color:#7fd0ff; letter-spacing:1.2px; margin-bottom:7px; text-transform:uppercase; }
+  #impact table { width:100%; border-collapse:collapse; font-size:12.2px; }
+  #impact td { padding:3.5px 4px; border-bottom:1px solid rgba(255,255,255,.07); }
+  #impact td.v { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  #impact .ok { color:#7ee087; font-weight:600; }
+  #impact .no { color:#ff8076; font-weight:600; }
+  #impact .note { margin-top:6px; font-size:10.3px; opacity:.55; line-height:1.5; }
+  #splitBar { position:absolute; top:0; bottom:0; width:4px; margin-left:-2px;
+    background:rgba(255,255,255,.8); cursor:ew-resize; display:none; z-index:15;
+    box-shadow:0 0 10px rgba(0,0,0,.55); }
+  #splitBar .knob { position:absolute; top:46%; left:50%; transform:translate(-50%,-50%);
+    background:#1d7fd4; border:1px solid #8fd0ff; border-radius:16px; padding:7px 11px;
+    font-size:12px; color:#fff; white-space:nowrap; user-select:none; }
+  .splitTag { position:absolute; top:64px; font-size:13.5px; font-weight:650; color:#fff;
+    padding:6px 14px; border-radius:9px; display:none; z-index:14; transform:translateX(-50%);
+    text-shadow:0 1px 3px rgba(0,0,0,.5); }
+  #splitL { background:rgba(35,140,80,.88); }
+  #splitR { background:rgba(200,55,35,.88); }
+  #scada { display:none; padding:11px 13px; }
+  #scada h3 { font-size:11px; color:#7fd0ff; letter-spacing:1.2px; margin-bottom:7px; text-transform:uppercase; }
+  #flowCfg { display:none; padding:11px 13px; }
+  #flowCfg h3 { font-size:11px; color:#7fd0ff; letter-spacing:1.2px; margin-bottom:8px; text-transform:uppercase; }
+  #flowCfg input[type=range] { flex:1; -webkit-appearance:none; height:5px; border-radius:3px;
+    background:rgba(255,255,255,.18); outline:none; cursor:pointer; }
+  #flowCfg input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px;
+    border-radius:50%; background:#3fd0e0; }
+  #flowCfg b { width:44px; text-align:right; }
+  #ctlBoard { position:absolute; right:14px; bottom:16px; width:300px; padding:11px 13px; display:none; }
+  #ctlBoard h3 { font-size:11px; color:#7fd0ff; letter-spacing:1.2px; margin-bottom:7px; text-transform:uppercase; }
+  #scadaRow { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:9px; font-size:10.6px; }
+  .lampBox { display:flex; align-items:center; gap:4px; opacity:.9; }
+  .lamp { width:10px; height:10px; border-radius:50%; background:#2e9e5b; box-shadow:0 0 6px #2e9e5b; }
+  .lamp.amber { background:#d9a514; box-shadow:0 0 7px #d9a514; animation:blink .7s infinite; }
+  .lamp.red { background:#d6402a; box-shadow:0 0 7px #d6402a; }
+  .lamp.pulse { animation:blink 1.6s infinite; }
+  #bayGrid { display:grid; grid-template-columns:repeat(12, 1fr); gap:3px; margin-bottom:9px; }
+  .bay { aspect-ratio:1; border-radius:4px; background:#22364a; border:1px solid rgba(255,255,255,.14);
+    cursor:pointer; transition:background .2s; }
+  .bay:hover { border-color:#5db9ff; }
+  .bay.open { background:#2e9e5b; box-shadow:0 0 5px rgba(46,158,91,.7); }
+  .bay.mov { background:#d9a514; }
+  #ctlBtns { display:flex; gap:6px; }
+  #ctlBtns .xBtn { flex:1; text-align:center; font-size:11.4px; padding:6px 4px; }
+  #opLog { margin-top:8px; max-height:96px; overflow-y:auto; font-size:10.6px; line-height:1.6;
+    font-family:Consolas, monospace; color:#bfe0ff; border-top:1px solid rgba(255,255,255,.12); padding-top:5px; }
+  #opLog .lgC { color:#ffd34d; }
+  #opLog .lgD { color:#7ee087; }
+  #opLog .lgA { color:#ff9c8a; }
+  #spdRow { display:flex; align-items:center; gap:8px; font-size:12px; margin:2px 0 8px; }
+  #spd { flex:1; -webkit-appearance:none; height:5px; border-radius:3px;
+    background:rgba(255,255,255,.18); outline:none; cursor:pointer; }
+  #spd::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px;
+    border-radius:50%; background:#5db9ff; }
+  #credit { position:absolute; left:16px; bottom:8px; font-size:11px; color:rgba(255,255,255,.55);
+    pointer-events:none; z-index:5; text-shadow:0 1px 3px rgba(0,0,0,.7); }
+  .dock { position:absolute; display:flex; flex-direction:column; gap:10px; width:314px;
+    max-height:calc(100vh - 170px); overflow-y:auto; overflow-x:hidden; z-index:6;
+    scrollbar-width:thin; padding:2px; }
+  #dockL { left:14px; top:118px; }
+  #dockR { right:12px; top:12px; }
+  .dock .panel { position:static !important; width:auto !important; max-width:none !important;
+    left:auto !important; right:auto !important; top:auto !important; bottom:auto !important;
+    pointer-events:auto; flex:0 0 auto; }
+  .dock .panel h3, .dock #stageCard .num, .dock .gHead h3 { cursor:pointer; user-select:none; }
+  .dock .panel h3::after, .dock #stageCard .num::after { content:" ▾"; opacity:.45; font-size:9px; }
+  .dock .panel.min h3::after, .dock #stageCard.min .num::after { content:" ▸"; }
+  .panel.min > *:not(h3):not(.gHead):not(.num) { display:none !important; }
+  #tip { position:absolute; pointer-events:none; display:none; z-index:20;
+    background:rgba(10,24,40,.93); border:1px solid #5db9ff; border-radius:8px;
+    padding:6px 11px; font-size:12.5px; color:#fff; white-space:nowrap;
+    box-shadow:0 4px 14px rgba(0,0,0,.45); }
+  #hint { position:absolute; bottom:96px; right:18px; color:rgba(255,255,255,.5);
+    font-size:11px; pointer-events:none; text-shadow:0 1px 4px rgba(0,0,0,.8); text-align:right; }
+  #loader { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background:#0a1622; color:#7fd0ff; font-size:14px; letter-spacing:1px; z-index:10; transition:opacity .6s; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="loader">Đang dựng mô hình theo số liệu thiết kế…</div>
+<div id="title">
+  <h1>ĐẬP HỘP CHÌM HÀM LUÔNG</h1>
+  <p>13 đơn nguyên × B 150 m · L 50 m · H 16,99 m · đáy −11,59 m · đỉnh +5,40 m</p>
+</div>
+<div id="tierBar" class="panel" style="position:absolute;top:74px;left:16px;display:flex;padding:4px;gap:4px;">
+  <div class="mode on" data-t="2" style="font-size:11.5px;padding:5px 10px;">Đơn nguyên 2 tầng (sông sâu)</div>
+  <div class="mode" data-t="1" style="font-size:11.5px;padding:5px 10px;">1 tầng</div>
+</div>
+<div id="modeBar" class="panel">
+  <div class="mode on" data-m="0">🏗 Thi công</div>
+  <div class="mode" data-m="1">🌊 Vận hành</div>
+  <div class="mode" data-m="2">🔍 Khám phá</div>
+</div>
+
+
+
+
+
+<div id="splitBar"><div class="knob">◀ kéo ▶</div></div>
+<div class="splitTag" id="splitL">CÓ CÔNG TRÌNH</div>
+<div class="splitTag" id="splitR">KHÔNG CÓ CÔNG TRÌNH</div>
+<div id="credit">© TS. Trương Hồng Sơn · Trường ĐH Thuỷ Lợi · Đề tài ĐTĐL.CN-51/23</div>
+<div id="tip"></div>
+<div id="dockR" class="dock">
+<div id="stageCard" class="panel">
+  <div class="num"><span id="stNum">Giai đoạn 1/7</span></div>
+  <h2 id="stName"></h2>
+  <p id="stDesc"></p>
+</div>
+<div id="impact" class="panel">
+  <h3>Tác động · so sánh CÓ / KHÔNG công trình</h3>
+  <table>
+    <tr><td></td><td class="v ok">CÓ đập</td><td class="v no">KHÔNG</td></tr>
+    <tr><td>Đất bị ngập</td><td class="v ok" id="iFw">—</td><td class="v no" id="iFn">—</td></tr>
+    <tr><td>Dân ảnh hưởng</td><td class="v ok" id="iPw">—</td><td class="v no" id="iPn">—</td></tr>
+    <tr><td>Tài sản rủi ro</td><td class="v ok" id="iAw">—</td><td class="v no" id="iAn">—</td></tr>
+    <tr><td>Độ mặn vùng sông</td><td class="v ok" id="iSw">—</td><td class="v no" id="iSn">—</td></tr>
+  </table>
+  <div class="note">Ước tính minh hoạ trong khung cảnh 7,2×5,2 km: 1.200 người/km² · 90 tỷ ₫/km² đất ven sông.</div>
+</div>
+<div id="scada" class="panel">
+  <h3>Thiết bị · SCADA</h3>
+  <div id="scadaRow">
+    <div class="lampBox"><div class="lamp" id="lPow"></div>Nguồn</div>
+    <div class="lampBox"><div class="lamp" id="lHoist"></div>Tời nâng</div>
+    <div class="lampBox"><div class="lamp pulse" id="lSens"></div>Cảm biến MN</div>
+    <div class="lampBox"><div class="lamp" id="lNav"></div>Đèn hiệu</div>
+    <div class="lampBox"><div class="lamp" id="lCom"></div>Liên lạc</div>
+</div>
+<div id="ctlBoard" class="panel">
+  <h3>Bảng điều khiển 48 khoang</h3>
+  </div>
+  <div id="bayGrid"></div>
+  <div id="ctlBtns">
+    <div class="xBtn" id="bAllOpen">MỞ HẾT</div>
+    <div class="xBtn" id="bAllClose">ĐÓNG HẾT</div>
+    <div class="xBtn" id="bAuto">VỀ TỰ ĐỘNG</div>
+  </div>
+  <div style="font-size:10.4px;opacity:.6;margin-top:7px">Bấm ô hoặc bấm thẳng vào cửa van trong cảnh 3D. Mực nước sông tích phân TRỰC TIẾP theo số khoang mở (mô hình cân bằng khối).</div>
+  <div id="opLog"></div>
+</div>
+</div>
+<div id="dockL" class="dock">
+<div id="gauges" class="panel">
+  <div class="gHead"><h3>Mực nước (MSL = 0)</h3>
+    <div class="zbtn" id="uiMinus">A−</div><div class="zbtn" id="uiPlus">A+</div></div>
+  <div id="alarm"></div>
+  <div id="spdRow">Tốc độ <input id="spd" type="range" min="0" max="5" step="1" value="2"> <b id="spdV">×1</b></div>
+  <canvas id="lvlChart" width="262" height="150"></canvas>
+  <div id="envRow">
+    <canvas id="envCv" width="92" height="92"></canvas>
+    <div id="envTxt">
+      Gió: <b id="eWind">—</b><br>
+      Sóng: <b id="eHs">—</b><br>
+      Hướng: <b id="eDir">—</b>
+    </div>
+  </div>
+  <div class="gRow" id="gSea"><div class="gLab">Phía biển</div>
+    <div class="gBarWrap"><div class="gBar"></div></div><div class="gVal">+0,00</div></div>
+  <div class="gRow" id="gRiver"><div class="gLab">Phía sông</div>
+    <div class="gBarWrap"><div class="gBar"></div></div><div class="gVal">+0,00</div></div>
+  <div class="gRow" id="gSaltW"><div class="gLab">Mặn CÓ đập</div>
+    <div class="gBarWrap"><div class="gBar"></div></div><div class="gVal">0‰</div></div>
+  <div class="gRow" id="gSaltN"><div class="gLab">Mặn KHÔNG</div>
+    <div class="gBarWrap"><div class="gBar"></div></div><div class="gVal">0‰</div></div>
+  <div class="gRow" id="gOpen"><div class="gLab">Độ mở van</div>
+    <div class="gBarWrap"><div class="gBar" style="background:linear-gradient(90deg,#2e7dd4,#5db9ff)"></div></div>
+    <div class="gVal">0%</div></div>
+  <div class="gRow" id="gFlow"><div class="gLab">Lưu lượng</div>
+    <div class="gBarWrap"><div class="gBar" style="background:linear-gradient(90deg,#3fb3c8,#7fe0d0)"></div></div>
+    <div class="gVal">0</div></div>
+  <div class="gRow" id="gPress"><div class="gLab">Áp lực van</div>
+    <div class="gBarWrap"><div class="gBar" style="background:linear-gradient(90deg,#7a4fb0,#c9a0ff)"></div></div>
+    <div class="gVal">—</div></div>
+  <div id="gGate">Cửa van: <b>—</b></div>
+  <div class="xBtn" id="cmpBtn" style="margin-top:9px;text-align:center;background:rgba(214,64,42,.25);border-color:rgba(255,120,100,.5)">⇄ Xem cảnh KHÔNG có công trình</div>
+  <div class="xBtn" id="manBtn" style="margin-top:7px;text-align:center;background:rgba(46,126,212,.25);border-color:rgba(93,185,255,.5)">🕹 Điều khiển tay từng khoang</div>
+</div>
+<div id="flowCfg" class="panel">
+  <h3>Dòng chảy · trực quan</h3>
+  <div id="spdRow" style="margin:0 0 6px">Mật độ <input id="fDen" type="range" min="300" max="3600" step="100" value="1400"> <b id="fDenV">1400</b></div>
+  <div id="spdRow" style="margin:0 0 6px">Vệt dài <input id="fLen" type="range" min="2" max="8" step="1" value="4"> <b id="fLenV">1,1s</b></div>
+  <div id="spdRow" style="margin:0">Độ sáng <input id="fBri" type="range" min="4" max="26" step="1" value="12"> <b id="fBriV">×1,2</b></div>
+</div>
+<div id="forceLegend" class="panel"></div>
+<div id="dtPanel" class="panel min">
+  <h3 id="dtPanelH">⛁ Số liệu MATLAB <span id="dtTag" style="opacity:.6"></span></h3>
+  <table id="dtTbl"></table>
+  <div class="src" id="dtSrc">đang đọc data/dhc_data.json…</div>
+</div>
+</div>
+<div id="hint">Kéo chuột: xoay · Lăn chuột: thu phóng</div>
+<div id="bar" class="panel">
+  <div id="chips"></div>
+  <div id="row2">
+    <button id="playBtn">❚❚</button>
+    <input id="seek" type="range" min="0" max="1000" value="0">
+    <div id="clock">00:00</div>
+  </div>
+  <div id="xRow">
+    <span class="xLab">Hiển thị</span>
+    <div class="xBtn" id="xFocus">Tập trung 1 đơn nguyên</div>
+    <div class="xBtn" id="xWater">Ẩn nước</div>
+    <div class="xBtn" id="xRay">X-ray</div>
+    <div class="xBtn" id="xLabel">Chú thích</div>
+    <div class="xBtn" id="xElev">Cao trình</div>
+    <span class="xLab">Kết cấu</span>
+    <div class="xBtn" id="xCut">Cắt: tắt</div>
+    <div class="xBtn" id="xGate">Van: đóng cả hai</div>
+    <div class="xBtn" id="xSpin">Tự xoay</div>
+    <span class="xLab">Tổ hợp lực</span>
+    <select class="xSel" id="xForceSel">
+      <option value="-1">— tắt —</option>
+      <option value="0">Ngăn mặn — triều cường (biển +3,50 / sông −1,42)</option>
+      <option value="1">Bão — nước dâng P0,1% (biển +4,39 / sông 0,00)</option>
+      <option value="2">Biến đổi khí hậu 2100 (biển +5,33 / sông −1,42)</option>
+    </select>
+  </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+
+
+const U = {
+  B:150.0, L:50.0, H:16.99,
+  zBed:-11.59, crest:5.40, boxTop:-6.59, mid:-0.595,
+  boxH:5.0, tEdge:2.5, tPart:1.8, nBay:4, bayW:34.9,
+  gateInsetLo:6.0, gateInsetUp:6.55, overlap:0.5,
+  bridgeW:10.0, hoistDepth:8.0, hoistLegW:1.2, hoistBeamH:1.5, hoistClear:2.0
+};
+const N_UNITS = 13, SLOT = U.B + 1.0, HERO_SLOT = 6;
+const slotZ = i => (i - HERO_SLOT) * SLOT;
+const DAM_X = 0;
+const BED_RIVER = -12.0;                    // đáy sông tự nhiên
+const BEDDING_TOP = U.zBed;                 // đỉnh lớp đệm đá = đáy bản đáy −11,59
+const FLOAT_DRAFT = 8.0;                    // mớn nước khi nổi
+const PIT = { x:-600, z:-1230, floor:-13.0, hw:100, hd:115 };  // bãi đúc trên bờ nam
+const HERO_START = { x:PIT.x - 30, y:PIT.floor + 0.2, z:PIT.z };
+const LV = { riverLow:-1.42, seaHHWL:3.50, seaP01:4.39, seaBDKH:5.33 };
+
+// ---------- Renderer / Scene ----------
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.localClippingEnabled = true;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0xc3d2dc, 1800, 7000);
+
+const camera = new THREE.PerspectiveCamera(52, innerWidth/innerHeight, 1, 20000);
+camera.position.set(2400, 380, -1400);
+
+// ---------- Ánh sáng + bóng đổ bám theo vùng nhìn ----------
+const hemi = new THREE.HemisphereLight(0xd8e8f4, 0x4a4a3a, 0.6);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff0da, 1.5);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+const SC = 420;
+sun.shadow.camera.left=-SC; sun.shadow.camera.right=SC;
+sun.shadow.camera.top=SC; sun.shadow.camera.bottom=-SC;
+sun.shadow.camera.near=100; sun.shadow.camera.far=3000;
+sun.shadow.bias = -0.0005;
+scene.add(sun, sun.target);
+const SUN_DIR = new THREE.Vector3(-0.45, 0.55, -0.55).normalize();
+
+// ---------- Bầu trời ----------
+const skyMat = new THREE.ShaderMaterial({
+  side:THREE.BackSide, depthWrite:false, fog:false,
+  uniforms:{ top:{value:new THREE.Color(0x33689f)}, mid:{value:new THREE.Color(0xa6c4dc)},
+    bot:{value:new THREE.Color(0xe7d9bd)}, sunDir:{value:SUN_DIR} },
+  vertexShader:`varying vec3 vD; void main(){ vD=normalize(position);
+    gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+  fragmentShader:`uniform vec3 top,mid,bot,sunDir; varying vec3 vD;
+    void main(){ float h=clamp(vD.y,-0.05,1.0);
+      vec3 c = h<0.16 ? mix(bot,mid,smoothstep(-0.05,0.16,h)) : mix(mid,top,smoothstep(0.16,0.8,h));
+      float s=pow(max(dot(normalize(vD),sunDir),0.0),300.0);
+      c+=vec3(1.0,0.93,0.8)*s*1.4;
+      c+=vec3(1.0,0.88,0.66)*pow(max(dot(normalize(vD),sunDir),0.0),6.0)*0.10;
+      gl_FragColor=vec4(c,1.0);}`
+});
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(9000, 24, 16), skyMat));
+
+// ---------- Môi trường phản chiếu (cubemap gradient) ----------
+(function buildEnv(){
+  const face = (c1, c2) => {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+    const x = cv.getContext('2d');
+    const g = x.createLinearGradient(0, 0, 0, 64);
+    g.addColorStop(0, c1); g.addColorStop(1, c2);
+    x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+    return cv;
+  };
+  const side = () => face('#7da7c4', '#cfc3a4');
+  const cube = new THREE.CubeTexture([side(), side(), face('#4d7fb0', '#7da7c4'),
+    face('#5e564a', '#3a352c'), side(), side()]);
+  cube.needsUpdate = true;
+  scene.environment = cube;
+})();
+
+// ---------- Hoa văn vật liệu (canvas thủ tục) ----------
+function makeCanvas(n, fn){
+  const cv = document.createElement('canvas'); cv.width = cv.height = n;
+  fn(cv.getContext('2d'), n);
+  const t = new THREE.CanvasTexture(cv);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+// bê tông: loang màu + vệt nước chảy + mạch ván khuôn
+const concreteTex = makeCanvas(512, (x, n) => {
+  x.fillStyle = '#b4b0a6'; x.fillRect(0, 0, n, n);
+  const img = x.getImageData(0, 0, n, n), d = img.data;
+  for (let i = 0; i < d.length; i += 4){
+    const v = (Math.random() - 0.5) * 22;
+    d[i] += v; d[i+1] += v; d[i+2] += v;
+  }
+  x.putImageData(img, 0, 0);
+  for (let k = 0; k < 46; k++){            // mảng loang
+    const r = 18 + Math.random() * 70;
+    const g = x.createRadialGradient(0,0,2, 0,0,r);
+    const dark = Math.random() < 0.6;
+    g.addColorStop(0, dark ? 'rgba(96,92,84,0.16)' : 'rgba(222,218,208,0.13)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.save(); x.translate(Math.random()*n, Math.random()*n);
+    x.fillStyle = g; x.fillRect(-r, -r, r*2, r*2); x.restore();
+  }
+  for (let k = 0; k < 26; k++){            // vệt nước chảy dọc
+    const w = 2 + Math.random()*8, h = 40 + Math.random()*180;
+    const g = x.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, 'rgba(70,68,60,0.20)'); g.addColorStop(1, 'rgba(70,68,60,0)');
+    x.save(); x.translate(Math.random()*n, Math.random()*n*0.7);
+    x.fillStyle = g; x.fillRect(-w/2, 0, w, h); x.restore();
+  }
+  x.strokeStyle = 'rgba(60,58,52,0.30)'; x.lineWidth = 1.5;   // mạch ván khuôn
+  for (let y = 0; y <= n; y += 128){ x.beginPath(); x.moveTo(0, y); x.lineTo(n, y); x.stroke(); }
+  for (let xx = 0; xx <= n; xx += 170){ x.beginPath(); x.moveTo(xx, 0); x.lineTo(xx, n); x.stroke(); }
+  x.fillStyle = 'rgba(50,48,44,0.45)';     // lỗ ti ván khuôn
+  for (let yy = 64; yy < n; yy += 128) for (let xx = 85; xx < n; xx += 170)
+    { x.beginPath(); x.arc(xx, yy, 3, 0, 7); x.fill(); }
+});
+// thép cửa van: sơn xám-xanh, gân dầm ngang + rỉ chảy
+const gateTex = makeCanvas(512, (x, n) => {
+  x.fillStyle = '#4e5e58'; x.fillRect(0, 0, n, n);
+  const img = x.getImageData(0, 0, n, n), d = img.data;
+  for (let i = 0; i < d.length; i += 4){
+    const v = (Math.random() - 0.5) * 14;
+    d[i] += v; d[i+1] += v; d[i+2] += v;
+  }
+  x.putImageData(img, 0, 0);
+  for (let y = 36; y < n; y += 64){        // dầm chính ngang (bóng + sáng)
+    x.fillStyle = 'rgba(0,0,0,0.30)'; x.fillRect(0, y, n, 11);
+    x.fillStyle = 'rgba(255,255,255,0.10)'; x.fillRect(0, y+11, n, 3);
+  }
+  for (let k = 0; k < 34; k++){            // rỉ sét chảy
+    const w = 2+Math.random()*7, h = 30+Math.random()*150, sy = Math.random()*n;
+    const g = x.createLinearGradient(0, sy, 0, sy+h);
+    g.addColorStop(0, 'rgba(122,68,30,0.36)'); g.addColorStop(1, 'rgba(122,68,30,0)');
+    x.fillStyle = g; x.fillRect(Math.random()*n, sy, w, h);
+  }
+  x.fillStyle = 'rgba(150,150,150,0.5)';   // hàng đinh tán/bu lông
+  for (let y = 30; y < n; y += 64) for (let xx = 8; xx < n; xx += 26)
+    { x.beginPath(); x.arc(xx, y, 2, 0, 7); x.fill(); }
+});
+// mặt đường nhựa: vạch kẻ tim đường + mép đường
+const roadTex = makeCanvas(256, (x, n) => {
+  x.fillStyle = '#3c3f42'; x.fillRect(0, 0, n, n);
+  const img = x.getImageData(0, 0, n, n), d = img.data;
+  for (let i = 0; i < d.length; i += 4){
+    const v = (Math.random()-0.5)*16; d[i]+=v; d[i+1]+=v; d[i+2]+=v;
+  }
+  x.putImageData(img, 0, 0);
+  x.fillStyle = 'rgba(225,225,220,0.9)';
+  x.fillRect(14, 0, 5, n); x.fillRect(n-19, 0, 5, n);
+  x.fillStyle = 'rgba(230,200,60,0.9)';
+  for (let y = 0; y < n; y += 64) x.fillRect(n/2-3, y, 6, 34);
+});
+roadTex.repeat.set(1, 14);
+// nhiễu chi tiết cho địa hình
+const groundTex = makeCanvas(256, (x, n) => {
+  const img = x.createImageData(n, n), d = img.data;
+  for (let i = 0; i < d.length; i += 4){
+    const v = 205 + Math.random()*50;
+    d[i] = d[i+1] = d[i+2] = v; d[i+3] = 255;
+  }
+  x.putImageData(img, 0, 0);
+});
+groundTex.repeat.set(90, 64);
+
+// ---------- Vật liệu ----------
+const M = {
+  concrete : new THREE.MeshStandardMaterial({ color:0xd6d2c8, map:concreteTex,
+    bumpMap:concreteTex, bumpScale:0.6, roughness:0.94, metalness:0.02, envMapIntensity:0.35 }),
+  concreteD: new THREE.MeshStandardMaterial({ color:0xb8b4aa, map:concreteTex,
+    roughness:0.96, metalness:0.02, envMapIntensity:0.25 }),
+  fresh    : new THREE.MeshStandardMaterial({ color:0xe4e2da, map:concreteTex, roughness:0.97 }),
+  gate     : new THREE.MeshStandardMaterial({ color:0xb6c4be, map:gateTex,
+    bumpMap:gateTex, bumpScale:0.8, roughness:0.52, metalness:0.62, envMapIntensity:0.8 }),
+  steel    : new THREE.MeshStandardMaterial({ color:0x5a7184, roughness:0.42, metalness:0.8, envMapIntensity:0.9 }),
+  steelRed : new THREE.MeshStandardMaterial({ color:0x96362a, roughness:0.55, metalness:0.55 }),
+  yellow   : new THREE.MeshStandardMaterial({ color:0xc79a20, roughness:0.55, metalness:0.45 }),
+  white    : new THREE.MeshStandardMaterial({ color:0xdfdfd8, roughness:0.6 }),
+  dark     : new THREE.MeshStandardMaterial({ color:0x232e38, roughness:0.65, metalness:0.4 }),
+  hullRed  : new THREE.MeshStandardMaterial({ color:0x7e2a1e, roughness:0.5, metalness:0.35, envMapIntensity:0.6 }),
+  hullBlk  : new THREE.MeshStandardMaterial({ color:0x161f26, roughness:0.5, metalness:0.4, envMapIntensity:0.7 }),
+  rock     : new THREE.MeshStandardMaterial({ color:0x6a6359, map:concreteTex, roughness:1.0 }),
+  sheet    : new THREE.MeshStandardMaterial({ color:0x55667a, roughness:0.5, metalness:0.7, envMapIntensity:0.7 }),
+  rebar    : new THREE.MeshStandardMaterial({ color:0x6e4f33, roughness:0.8, metalness:0.5 }),
+  buoyRed  : new THREE.MeshStandardMaterial({ color:0xc23a26, roughness:0.5 }),
+  lampG    : new THREE.MeshStandardMaterial({ color:0x2fae5a, emissive:0x0e6e34, roughness:0.4 }),
+  lampR    : new THREE.MeshStandardMaterial({ color:0xd6402a, emissive:0x7e1408, roughness:0.4 }),
+  gina     : new THREE.MeshStandardMaterial({ color:0x1a1a1a, roughness:0.9 }),
+  road     : new THREE.MeshStandardMaterial({ map:roadTex, roughness:0.95, metalness:0 })
+};
+function box(w, h, d, mat, x, y, z, parent){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true;
+  if (parent) parent.add(m);
+  return m;
+}
+function cyl(rt, rb, h, mat, x, y, z, parent, seg){
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg || 12), mat);
+  m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true;
+  if (parent) parent.add(m);
+  return m;
+}
+const lerp = (a,b,t) => a + (b-a)*t;
+const clamp01 = t => Math.max(0, Math.min(1, t));
+const ease = t => { t = clamp01(t); return t*t*(3-2*t); };
+const easeIO = t => 0.5 - 0.5*Math.cos(Math.PI*clamp01(t));
+const fmtLv = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(2).replace('.', ',');
+
+// ---------- Điều khiển xoay/thu phóng của người dùng ----------
+const orbit = { yaw:0, pitch:0, dist:1, drag:false, px:0, py:0, free:false,
+  fYaw:0.8, fPitch:0.32, fDist:600, target:new THREE.Vector3(0,0,0) };
+canvas.addEventListener('pointerdown', e => { orbit.drag = true; orbit.px = e.clientX; orbit.py = e.clientY; });
+addEventListener('pointerup', () => orbit.drag = false);
+addEventListener('pointermove', e => {
+  if (!orbit.drag) return;
+  const dx = (e.clientX-orbit.px)*0.005, dy = (e.clientY-orbit.py)*0.003;
+  if (orbit.free){ orbit.fYaw -= dx; orbit.fPitch = Math.max(0.06, Math.min(1.35, orbit.fPitch + dy)); }
+  else { orbit.yaw += dx; orbit.pitch = Math.max(-0.5, Math.min(0.8, orbit.pitch + dy)); }
+  orbit.px = e.clientX; orbit.py = e.clientY;
+});
+canvas.addEventListener('wheel', e => {
+  const k = 1 + Math.sign(e.deltaY)*0.09;
+  if (orbit.free) orbit.fDist = Math.max(60, Math.min(5000, orbit.fDist*k));
+  else orbit.dist = Math.max(0.3, Math.min(3.5, orbit.dist*k));
+}, { passive:true });
+
+// ============================================================
+// ĐỊA HÌNH CỬA SÔNG HÀM LUÔNG (bề rộng sông ≈ 2,1 km tại tuyến)
+// ============================================================
+const riverC = x => 60 * Math.sin(x * 0.0008);
+const riverHW = x => 1060 + (x > 0 ? x * 0.25 : x * 0.06);
+function noise2(x, z){
+  return Math.sin(x*0.013+z*0.011)*0.5 + Math.sin(x*0.027-z*0.019)*0.3 + Math.sin(x*0.007+z*0.033)*0.2;
+}
+function terrainH(x, z){
+  const d = Math.abs(z - riverC(x)) - riverHW(x);
+  let h;
+  if (d < 0){
+    h = lerp(0.8, BED_RIVER, ease(-d/170)) + noise2(x, z)*0.8;
+  } else {
+    // đồng bằng cửa sông THẤP & PHẲNG (ruộng vườn +0,7…+1,8 m) — đặc trưng ĐBSCL
+    h = Math.min(1.75, 0.7 + d*0.012) + noise2(x, z)*0.22;
+  }
+  // bờ hạ thấp dần và chuyển thành biển ngoài cửa sông
+  if (x > 900){
+    const f = 1 - ease((x - 900)/800);
+    h = h*f - 8*(1 - f) + noise2(x, z)*0.5*(1-f);
+  }
+  // đê nối tiếp hai vai đập (chống nước dâng vòng qua đầu tuyến)
+  if (Math.abs(x) < 70 && Math.abs(z) > 1045 && Math.abs(z) < 1330){
+    const k = ease(1 - Math.abs(x)/70) * ease((Math.abs(z) - 1045)/45) * ease((1330 - Math.abs(z))/80);
+    h = Math.max(h, lerp(h, 7.0, k));
+  }
+  // hào nạo vét tại tuyến đập
+  if (Math.abs(x) < 50 && Math.abs(z - riverC(0)) < 1085){
+    const k = ease(1 - Math.abs(x)/50);
+    if (h < -5) h = lerp(h, -12.4, k);
+  }
+  // hố móng (bãi đúc) + kênh dắt
+  const rPit  = Math.max(Math.abs(x-PIT.x)/PIT.hw, Math.abs(z-PIT.z)/PIT.hd);
+  const rChan = Math.max(Math.abs(x+600)/58, Math.abs(z+1070)/78);
+  const r = Math.min(rPit, rChan);
+  if (r < 1.3) h = lerp(h, PIT.floor, ease((1.3 - r)/0.3));
+  return h;
+}
+
+(function buildTerrain(){
+  const W = 7200, D = 5200, SX = 260, SZ = 190;
+  const g = new THREE.PlaneGeometry(W, D, SX, SZ);
+  g.rotateX(-Math.PI/2);
+  const pos = g.attributes.position;
+  const col = new Float32Array(pos.count*3);
+  const cGrass1=new THREE.Color(0x46603a), cGrass2=new THREE.Color(0x5d7a45),
+        cSand=new THREE.Color(0xc4b18a), cMud=new THREE.Color(0x7e7058),
+        cBed=new THREE.Color(0x564f44), cPit=new THREE.Color(0x9a8f7a);
+  const tmp = new THREE.Color();
+  for (let i = 0; i < pos.count; i++){
+    const x = pos.getX(i), z = pos.getZ(i);
+    const h = terrainH(x, z);
+    pos.setY(i, h);
+    const n = (noise2(x*2.1, z*2.1)+1)/2;
+    if (h < -5)       tmp.copy(cBed).lerp(cMud, n*0.35);
+    else if (h < 0.8) tmp.copy(cMud).lerp(cSand, ease((h+5)/5.8));
+    else if (h < 2.6) tmp.copy(cSand).lerp(cGrass1, ease((h-0.8)/1.8));
+    else              tmp.copy(cGrass1).lerp(cGrass2, n);
+    if (h > 0.75 && h < 2.4){                       // ô thửa ruộng vườn
+      const fx = Math.floor((x + 3600)/95), fz = Math.floor((z + 2600)/72);
+      let fr = Math.abs(Math.sin(fx*12.9898 + fz*78.233)*43758.5453) % 1;
+      const PAD = [0x6fae4e, 0x8fbe5a, 0xb4c468, 0x96b04b, 0xc4b85a];
+      if (fr < 0.14) tmp.setHex(0x55777a);                      // thửa ruộng đang ngâm nước
+      else tmp.setHex(PAD[Math.min(4, ((fr - 0.14)/0.86*5)|0)]).lerp(cGrass1, 0.18*n);
+    }
+    if (x > 1000 && h > -1) tmp.lerp(cSand, 0.5);          // dải cát ven biển
+    const rp = Math.max(Math.abs(x-PIT.x)/(PIT.hw+4), Math.abs(z-PIT.z)/(PIT.hd+4));
+    if (rp < 1 && h < -9) tmp.copy(cPit);
+    col[i*3]=tmp.r; col[i*3+1]=tmp.g; col[i*3+2]=tmp.b;
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  g.computeVertexNormals();
+  const terr = new THREE.Mesh(g, new THREE.MeshStandardMaterial({
+    vertexColors:true, map:groundTex, roughness:1.0, metalness:0 }));
+  terr.receiveShadow = true;
+  scene.add(terr);
+})();
+
+// ============================================================
+// BẢN ĐỒ CAO ĐỘ cho nước "biết độ sâu" (mép ngập mềm, không z-fighting)
+// + thống kê diện tích đất theo cao độ (tính diện tích ngập)
+// ============================================================
+const TERR_W = 1024, TERR_H = 768;
+const TERR_X0 = -3600, TERR_Z0 = -2600, TERR_SX = 7200, TERR_SZ = 5200;
+const landBins = new Float64Array(80);            // bin 0,25 m: h ∈ [0, 20)
+let heightTex;
+{
+  const data = new Uint8Array(TERR_W*TERR_H*4);
+  const cellKm2 = (TERR_SX/TERR_W)*(TERR_SZ/TERR_H)/1e6;
+  for (let j = 0; j < TERR_H; j++){
+    for (let i = 0; i < TERR_W; i++){
+      const x = TERR_X0 + (i + 0.5)/TERR_W*TERR_SX;
+      const z = TERR_Z0 + (j + 0.5)/TERR_H*TERR_SZ;
+      const h = terrainH(x, z);
+      const v = Math.max(0, Math.min(255, Math.round((h + 20)/32*255)));
+      const k = (j*TERR_W + i)*4;
+      data[k] = data[k+1] = data[k+2] = v; data[k+3] = 255;
+      if (h > 0.3 && h < 20) landBins[Math.min(79, (h*4)|0)] += cellKm2;
+    }
+  }
+  heightTex = new THREE.DataTexture(data, TERR_W, TERR_H, THREE.RGBAFormat);
+  heightTex.minFilter = heightTex.magFilter = THREE.LinearFilter;
+  heightTex.needsUpdate = true;
+}
+function floodKm2(lvl){
+  let a = 0;
+  for (let b = 1; b < 80; b++) if (b*0.25 < lvl) a += landBins[b];
+  return a;
+}
+
+// ============================================================
+// HAI KHỐI NƯỚC: PHÍA SÔNG (ngọt) và PHÍA BIỂN (mặn)
+// — sóng nhỏ chân thực, bạc đầu khi bão, mực nước độc lập
+// ============================================================
+function waterMaterial(){
+  return new THREE.ShaderMaterial({
+    transparent:true, depthWrite:false, side:THREE.DoubleSide,
+    uniforms:{
+      uTime:{value:0}, uAmp:{value:1.0},
+      uSunDir:{value:SUN_DIR},
+      uShallow:{value:new THREE.Color(0x4e7d8a)},
+      uDeep:{value:new THREE.Color(0x1d3f46)},
+      uSky:{value:new THREE.Color(0xaecbdf)},
+      uOpacity:{value:0.9},
+      uTerr:{value:heightTex},
+      uSaltX:{value:1e6},
+      uFloodViz:{value:0},
+      uSaltSh:{value:new THREE.Color(0x3f8fa0)},
+      uSaltDp:{value:new THREE.Color(0x14424e)},
+      uProtect:{value:0}
+    },
+    vertexShader:`
+      uniform float uTime; uniform float uAmp;
+      varying vec3 vW; varying vec3 vN;
+      void wav(vec2 p, float t, inout float h, inout vec2 g){
+        vec2 d1=normalize(vec2(1.0,0.30)); float k1=0.016,a1=0.26,s1=0.7;
+        vec2 d2=normalize(vec2(-0.45,1.0)); float k2=0.043,a2=0.12,s2=1.1;
+        vec2 d3=normalize(vec2(0.8,-0.62)); float k3=0.10,a3=0.05,s3=1.8;
+        vec2 d4=normalize(vec2(0.2,0.97));  float k4=0.21,a4=0.022,s4=2.6;
+        float p1=dot(p,d1)*k1+t*s1, p2=dot(p,d2)*k2+t*s2, p3=dot(p,d3)*k3+t*s3, p4=dot(p,d4)*k4+t*s4;
+        h += (a1*sin(p1)+a2*sin(p2)+a3*sin(p3)+a4*sin(p4)) * uAmp;
+        g += (d1*(a1*k1*cos(p1))+d2*(a2*k2*cos(p2))+d3*(a3*k3*cos(p3))+d4*(a4*k4*cos(p4))) * uAmp;
+      }
+      void main(){
+        vec4 wp = modelMatrix * vec4(position, 1.0);
+        float h=0.0; vec2 g=vec2(0.0);
+        wav(wp.xz, uTime, h, g);
+        wp.y += h;
+        vW = wp.xyz;
+        vN = normalize(vec3(-g.x, 1.0, -g.y));
+        gl_Position = projectionMatrix * viewMatrix * wp;
+      }`,
+    fragmentShader:`
+      uniform vec3 uSunDir,uShallow,uDeep,uSky,uSaltSh,uSaltDp;
+      uniform float uOpacity,uTime,uAmp,uSaltX,uFloodViz,uProtect;
+      uniform sampler2D uTerr;
+      varying vec3 vW; varying vec3 vN;
+      void main(){
+        // độ sâu nước tại điểm này (mép ngập mềm — không cắt cứng địa hình)
+        vec2 tuv = (vW.xz - vec2(-3600.0, -2600.0)) / vec2(7200.0, 5200.0);
+        float terr = texture2D(uTerr, tuv).r * 32.0 - 20.0;
+        float dep = vW.y - terr;
+        if (dep < 0.02) discard;
+        // vành đai đập + đê khép kín: nước không vào được đất sau đê
+        if (uProtect > 0.5){
+          float rc = 60.0*sin(vW.x*0.0008);
+          float hw = 1060.0 + (vW.x > 0.0 ? vW.x*0.25 : vW.x*0.06) + 60.0;
+          bool corridor = abs(vW.z - rc) < hw;       // lòng dẫn giữa hai tuyến đê
+          bool openSea  = vW.x > 1050.0;             // biển ngoài đê (ngoài đê ngập là đúng)
+          bool dock     = vW.x > -720.0 && vW.x < -480.0 && vW.z > -1370.0 && vW.z < -990.0;
+          if (!(corridor || openSea || dock)) discard;
+        }
+        vec3 N = normalize(vN);
+        // gợn nhỏ tần số cao (nhiễu pháp tuyến trong fragment)
+        N.xz += 0.045*vec2(sin(vW.x*0.55+uTime*1.7)*sin(vW.z*0.42-uTime*1.3),
+                           sin(vW.z*0.61+uTime*1.5)*sin(vW.x*0.38+uTime*1.1));
+        N = normalize(N);
+        vec3 V = normalize(cameraPosition - vW);
+        float fres = pow(1.0 - max(dot(N,V),0.0), 3.2);
+        vec3 col = mix(uDeep, uShallow, 0.3 + 0.35*fres + 0.2*N.x);
+        // nêm mặn LOANG từ cửa biển lên (mặt loang lượn sóng, không đổi màu đồng loạt)
+        float saltF = smoothstep(uSaltX - 1900.0 + 260.0*sin(vW.z*0.0034 + uTime*0.2),
+                                 uSaltX + 320.0, vW.x);
+        col = mix(col, mix(uSaltDp, uSaltSh, 0.4 + 0.3*fres), saltF*0.95);
+        col = mix(col, uSky, fres*0.7);
+        vec3 R = reflect(-uSunDir, N);
+        float spec = pow(max(dot(R,V),0.0), 140.0);
+        float spark = pow(max(dot(R,V),0.0), 900.0);
+        col += vec3(1.0,0.94,0.8)*(spec*0.45 + spark*1.8);
+        // bạc đầu sóng khi biển động (uAmp lớn)
+        float storm = clamp((uAmp-1.2)*0.7, 0.0, 1.0);
+        float crest = smoothstep(0.992, 0.972, N.y);
+        col = mix(col, vec3(0.93,0.96,0.97), crest*storm*0.85);
+        // dải bọt + màu phù sa sáng ven bờ, gợn theo thời gian
+        float shore = 1.0 - smoothstep(0.15, 2.2, dep);
+        float lap = 0.5 + 0.5*sin(dep*9.0 - uTime*1.6);
+        col = mix(col, vec3(0.86, 0.83, 0.72), shore*(0.22 + 0.18*lap));
+        col = mix(col, vec3(0.95, 0.97, 0.97), smoothstep(0.5, 0.12, dep)*0.35);
+        // chế độ BẢN ĐỒ NGẬP: tô màu theo độ sâu — CHỈ trên đất bị ngập (terr > +0,35)
+        if (uFloodViz > 0.5 && terr > 0.35){
+          vec3 ramp = mix(vec3(0.96, 0.85, 0.28), vec3(0.72, 0.10, 0.08),
+                          smoothstep(0.3, 4.5, dep));
+          col = mix(col, ramp, 0.55);
+        }
+        // mỏng dần về 0 tại mép — hết nhiễu răng cưa
+        gl_FragColor = vec4(col, uOpacity * smoothstep(0.02, 1.1, dep));
+      }`
+  });
+}
+const riverMat = waterMaterial(); riverMat.uniforms.uProtect.value = 1;
+const seaMat   = waterMaterial(); seaMat.uniforms.uProtect.value = 1;
+const dockMat  = waterMaterial(); dockMat.uniforms.uAmp.value = 0.25;
+
+const riverWater = new THREE.Mesh(new THREE.PlaneGeometry(3600, 5200, 110, 140), riverMat);
+riverWater.geometry.rotateX(-Math.PI/2);
+riverWater.position.set(-1781 + DAM_X, 0, 0);   // mép nước ngọt tới đúng khe van x=19
+// hạ đỉnh mặt nước trong phạm vi hố móng khô (ẩn dưới đáy hố)
+{
+  const p = riverWater.geometry.attributes.position;
+  for (let i = 0; i < p.count; i++){
+    const wx = p.getX(i) - 1781, wz = p.getZ(i);
+    if (wx > -715 && wx < -485 && wz > -1360 && wz < -1008) p.setY(i, -16);
+  }
+}
+const seaWater = new THREE.Mesh(new THREE.PlaneGeometry(3600, 5200, 110, 140), seaMat);
+seaWater.geometry.rotateX(-Math.PI/2);
+seaWater.position.set(1819 + DAM_X, 0, 0);
+const dockWater = new THREE.Mesh(new THREE.PlaneGeometry(190, 345, 26, 46), dockMat);
+dockWater.geometry.rotateX(-Math.PI/2);
+dockWater.position.set(PIT.x, PIT.floor + 0.3, -1180);
+scene.add(riverWater, seaWater, dockWater);
+riverWater.renderOrder = seaWater.renderOrder = dockWater.renderOrder = 1;
+
+// màu nước hai phía (lerp theo chế độ): ngọt phù sa / mặn xanh
+const COL = {
+  riverSh:new THREE.Color(0x8a8a5e), riverDp:new THREE.Color(0x4a4d36),
+  seaSh:new THREE.Color(0x3f8fa0),  seaDp:new THREE.Color(0x14424e),
+  mixSh:new THREE.Color(0x5e7d72),  mixDp:new THREE.Color(0x2a4540)
+};
+function setWaterMix(k){    // k=0: nước lợ đồng nhất (thi công) — k=1: phân tách mặn/ngọt (vận hành)
+  riverMat.uniforms.uShallow.value.copy(COL.mixSh).lerp(COL.riverSh, k);
+  riverMat.uniforms.uDeep.value.copy(COL.mixDp).lerp(COL.riverDp, k);
+  seaMat.uniforms.uShallow.value.copy(COL.mixSh).lerp(COL.seaSh, k);
+  seaMat.uniforms.uDeep.value.copy(COL.mixDp).lerp(COL.seaDp, k);
+}
+setWaterMix(0);
+
+// ============================================================
+// HỐ MÓNG (bãi đúc): tường cừ + phai đê quây + kênh dắt
+// ============================================================
+(function buildDock(){
+  const top = 2.4, depth = top - PIT.floor, yC = (top + PIT.floor)/2;
+  box(PIT.hw*2+4, depth, 3, M.sheet, PIT.x, yC, PIT.z - PIT.hd, scene);
+  box(3, depth, PIT.hd*2+4, M.sheet, PIT.x - PIT.hw, yC, PIT.z, scene);
+  box(3, depth, PIT.hd*2+4, M.sheet, PIT.x + PIT.hw, yC, PIT.z, scene);
+  box(3, depth, 120, M.sheet, -655, yC, -1072, scene);
+  box(3, depth, 120, M.sheet, -545, yC, -1072, scene);
+  [[PIT.x, PIT.z-PIT.hd, PIT.hw*2+6, 4],[PIT.x-PIT.hw, PIT.z, 4, PIT.hd*2+6],[PIT.x+PIT.hw, PIT.z, 4, PIT.hd*2+6]]
+    .forEach(p => box(p[2], 1.3, p[3], M.concreteD, p[0], top+0.65, p[1], scene));
+})();
+const cofferGate = box(112, 17, 4, M.steelRed, -600, -4.2, -1014, scene);
+box(116, 1.5, 6, M.steel, 0, 9.2, 0, cofferGate);
+
+// ============================================================
+// LỚP ĐỆM ĐÁ + CỪ CHỐNG THẤM dọc tuyến
+// ============================================================
+box(60, 0.6, N_UNITS*SLOT + 30, M.rock, DAM_X, BEDDING_TOP - 0.3, 0, scene);
+const cutoffWall = box(0.9, 18, N_UNITS*SLOT, M.sheet, DAM_X + (U.L/2 - U.gateInsetLo), U.zBed - 9, 0, scene);
+
+// ============================================================
+// CÂY XANH ven bờ (instanced)
+// ============================================================
+(function trees(){
+  const NP = 260, NB = 200;                         // dừa/cau + cây tán rộng
+  const pTrunkG = new THREE.CylinderGeometry(0.18, 0.4, 9.5, 5);
+  const pCrownG = new THREE.CylinderGeometry(4.8, 0.25, 2.9, 7);   // tán xoè hình ô
+  const bTrunkG = new THREE.CylinderGeometry(0.42, 0.72, 4.5, 5);
+  const bCrownG = new THREE.SphereGeometry(3.7, 7, 5);
+  const trunkM = new THREE.MeshStandardMaterial({ color:0x7a6248, roughness:1 });
+  const crownM = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:0.95 });
+  const pT = new THREE.InstancedMesh(pTrunkG, trunkM, NP);
+  const pC = new THREE.InstancedMesh(pCrownG, crownM, NP);
+  const bT = new THREE.InstancedMesh(bTrunkG, trunkM, NB);
+  const bC = new THREE.InstancedMesh(bCrownG, crownM, NB);
+  [pT, pC, bT, bC].forEach(o => o.castShadow = true);
+  const GREENS = [0x3f6d33, 0x4d7c3a, 0x5d8a40, 0x35602c, 0x6a9447];
+  const mt = new THREE.Matrix4(), q = new THREE.Quaternion(), qt = new THREE.Quaternion(),
+        ax = new THREE.Vector3(0, 1, 0), axT = new THREE.Vector3(1, 0, 0), col = new THREE.Color();
+  function place(im1, im2, n, palm){
+    let placed = 0, guard = 0;
+    while (placed < n && guard++ < 8000){
+      const x = -3400 + Math.random()*4300, z = -2500 + Math.random()*5000;
+      const h = terrainH(x, z);
+      if (h < 0.85 || h > 2.5) continue;
+      if (Math.abs(x - PIT.x) < 160 && Math.abs(z - PIT.z) < 180) continue;
+      if (Math.abs(x + 600) < 90 && Math.abs(z + 1070) < 130) continue;
+      const sc = 0.75 + Math.random()*0.8;
+      q.setFromAxisAngle(ax, Math.random()*6.28);
+      if (palm){ qt.setFromAxisAngle(axT, (Math.random() - 0.5)*0.16); q.multiply(qt); }
+      mt.compose(new THREE.Vector3(x, h + (palm ? 4.4 : 2.0)*sc, z), q, new THREE.Vector3(sc, sc, sc));
+      im1.setMatrixAt(placed, mt);
+      mt.compose(new THREE.Vector3(x, h + (palm ? 9.7 : 5.3)*sc, z), q,
+                 new THREE.Vector3(sc*(palm ? 1 : 1.3), sc*(palm ? 1 : 0.72), sc));
+      im2.setMatrixAt(placed, mt);
+      im2.setColorAt(placed, col.setHex(GREENS[(Math.random()*5)|0]));
+      placed++;
+    }
+    im1.count = im2.count = placed;
+  }
+  place(pT, pC, NP, true);
+  place(bT, bC, NB, false);
+  scene.add(pT, pC, bT, bC);
+})();
+
+// ============================================================
+// HỆ THỐNG ĐÊ BIỂN +6,3 m (đi kèm công trình — ẩn khi so sánh "KHÔNG")
+// ============================================================
+const dikeGrp = new THREE.Group(); scene.add(dikeGrp);
+(function seaDikes(){
+  // tuyến đê KHÉP KÍN: vai đập → dọc hai bờ cửa sông → rẽ dọc bờ biển
+  const MARGIN = 60;                                  // đê lùi vào bờ 60 m
+  const bankZ = (x, sg) => riverC(x) + sg*(riverHW(x) + MARGIN);
+  const seg = (x1, z1, x2, z2) => {
+    const len = Math.hypot(x2 - x1, z2 - z1) + 16;    // chồng mí 16 m cho liền tuyến
+    const g = new THREE.Group();
+    box(36, 2.6, len, M.rock, 0, 2.2, 0, g);          // thân đê mái thoải
+    box(18, 2.9, len, M.rock, 0, 4.85, 0, g);         // thân trên
+    box(7.6, 0.5, len, M.road, 0, 6.45, 0, g);        // mặt đê +6,5
+    g.position.set((x1 + x2)/2, 0, (z1 + z2)/2);
+    g.rotation.y = Math.atan2(x2 - x1, z2 - z1);
+    g.traverse(o => { o.castShadow = o.receiveShadow = true; });
+    dikeGrp.add(g);
+  };
+  [-1, 1].forEach(sg => {
+    let px = 30, pz = bankZ(30, sg);                  // bắt đầu sát vai đập (đê nối tiếp +7)
+    for (let x = 160; x <= 1050; x += 127){
+      const z2 = bankZ(x, sg);
+      seg(px, pz, x, z2);
+      px = x; pz = z2;
+    }
+    seg(px, pz, 1050, sg*2600);                       // rẽ chạy dọc bờ biển
+  });
+})();
+
+// ============================================================
+// XÓM NHÀ ven sông & ven biển (chịu ngập khi KHÔNG có công trình)
+// ============================================================
+(function villages(){
+  const N = 430;
+  const wallG = new THREE.BoxGeometry(10, 4.4, 7.6);
+  const roofG = new THREE.CylinderGeometry(0.03, 7.0, 3.4, 4, 1);
+  const wallM = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:0.85 });
+  const roofM = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:0.75 });
+  const walls = new THREE.InstancedMesh(wallG, wallM, N);
+  const roofs = new THREE.InstancedMesh(roofG, roofM, N);
+  walls.castShadow = roofs.castShadow = true;
+  const WCOL = [0xf2efe4, 0xe9dcc0, 0xdde6ea, 0xf0e2d6, 0xd8cba8];
+  const RCOL = [0xc23a26, 0x2e6eae, 0x9aa2aa, 0xd07a2a, 0x8a3b28];
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), q45 = new THREE.Quaternion(),
+        up = new THREE.Vector3(0, 1, 0), col = new THREE.Color();
+  q45.setFromAxisAngle(up, Math.PI/4);
+  let placed = 0, guard = 0;
+  while (placed < N && guard++ < 5000){
+    const cx = -3300 + Math.random()*4100, cz = -2450 + Math.random()*4900;
+    const hC = terrainH(cx, cz);
+    if (hC < 0.9 || hC > 2.3) continue;
+    const dEdge = Math.abs(cz - riverC(cx)) - riverHW(cx);
+    if (Math.random() < 0.7 && !(dEdge > 130 && dEdge < 1100)) continue;   // 70% xóm bám ven sông
+    if (Math.abs(cx - PIT.x) < 280 && Math.abs(cz - PIT.z) < 300) continue;
+    if (Math.abs(cx) < 140 && Math.abs(cz) > 1000) continue;
+    const nH = 8 + (Math.random()*9 | 0), rot = Math.random()*Math.PI;
+    for (let k = 0; k < nH && placed < N; k++){
+      const x = cx + (Math.random() - 0.5)*270, z = cz + (Math.random() - 0.5)*230;
+      const h = terrainH(x, z);
+      if (h < 0.8 || h > 2.4) continue;
+      q.setFromAxisAngle(up, rot + (Math.random() - 0.5)*0.5);
+      m4.compose(new THREE.Vector3(x, h + 2.2, z), q, new THREE.Vector3(1, 1, 1));
+      walls.setMatrixAt(placed, m4);
+      m4.compose(new THREE.Vector3(x, h + 6.1, z), q.clone().multiply(q45), new THREE.Vector3(1, 1, 1));
+      roofs.setMatrixAt(placed, m4);
+      walls.setColorAt(placed, col.setHex(WCOL[(Math.random()*5)|0]));
+      roofs.setColorAt(placed, col.setHex(RCOL[(Math.random()*5)|0]));
+      placed++;
+    }
+  }
+  walls.count = roofs.count = placed;
+  scene.add(walls, roofs);
+})();
+
+// ============================================================
+// AO TÔM (bờ bao đất + mặt nước sẫm) — đặc trưng ĐBSCL
+// ============================================================
+(function shrimpPonds(){
+  const N = 110;
+  const bundG = new THREE.BoxGeometry(118, 1.1, 78);
+  const waterG = new THREE.BoxGeometry(106, 0.5, 66);
+  const bundM = new THREE.MeshStandardMaterial({ color:0x86755a, roughness:1 });
+  const waterM = new THREE.MeshStandardMaterial({ color:0x2a5a58, roughness:0.25, metalness:0.05, envMapIntensity:0.7 });
+  const bunds = new THREE.InstancedMesh(bundG, bundM, N);
+  const ponds = new THREE.InstancedMesh(waterG, waterM, N);
+  bunds.receiveShadow = true;
+  const mt = new THREE.Matrix4(), q = new THREE.Quaternion(), ax = new THREE.Vector3(0, 1, 0);
+  let placed = 0, guard = 0;
+  while (placed < N && guard++ < 7000){
+    const x = -3400 + Math.random()*4300, z = -2500 + Math.random()*5000;
+    const h = terrainH(x, z);
+    if (h < 0.75 || h > 1.9) continue;
+    const dEdge = Math.abs(z - riverC(x)) - riverHW(x);
+    if (!((x > 200) || (dEdge > 100 && dEdge < 1500))) continue;   // vùng nuôi: ven biển & sau đê
+    if (Math.abs(x - PIT.x) < 220 && Math.abs(z - PIT.z) < 240) continue;
+    if (Math.abs(x) < 160 && Math.abs(z) > 1000) continue;
+    const sx = 0.55 + Math.random()*0.7, sz = 0.55 + Math.random()*0.6;
+    q.setFromAxisAngle(ax, (Math.random() < 0.5 ? 0 : Math.PI/2) + (Math.random() - 0.5)*0.08);
+    mt.compose(new THREE.Vector3(x, h - 0.15, z), q, new THREE.Vector3(sx, 1, sz));
+    bunds.setMatrixAt(placed, mt);
+    mt.compose(new THREE.Vector3(x, h + 0.38, z), q, new THREE.Vector3(sx, 1, sz));
+    ponds.setMatrixAt(placed, mt);
+    placed++;
+  }
+  bunds.count = ponds.count = placed;
+  scene.add(bunds, ponds);
+})();
+
+// ============================================================
+// MÂY
+// ============================================================
+const clouds = [];
+(function buildClouds(){
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+  const x = cv.getContext('2d');
+  const g = x.createRadialGradient(64,64,8, 64,64,62);
+  g.addColorStop(0,'rgba(255,255,255,0.92)');
+  g.addColorStop(0.55,'rgba(255,255,255,0.4)');
+  g.addColorStop(1,'rgba(255,255,255,0)');
+  x.fillStyle = g; x.fillRect(0,0,128,128);
+  const tex = new THREE.CanvasTexture(cv);
+  for (let i = 0; i < 16; i++){
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true,
+      opacity:0.45+Math.random()*0.3, depthWrite:false, fog:false }));
+    const s = 500 + Math.random()*800;
+    sp.scale.set(s, s*0.36, 1);
+    sp.position.set(-3200+Math.random()*6400, 550+Math.random()*350, -2400+Math.random()*4800);
+    sp.userData.v = 3 + Math.random()*4;
+    scene.add(sp); clouds.push(sp);
+  }
+})();
+
+// ============================================================
+// PHAO TIÊU + ĐƠN NGUYÊN CHUYỂN TIẾP HÌNH THANG hai đầu tuyến
+// ============================================================
+const buoys = [];
+const endsGrp = new THREE.Group(); scene.add(endsGrp);
+(function buoysAndEnds(){
+  for (let i = -1; i <= 1; i++){
+    [-1,1].forEach(s => {
+      const b = new THREE.Group();
+      cyl(1.6, 2.1, 3.2, M.buoyRed, 0, 1, 0, b);
+      cyl(0.16, 0.16, 3.6, M.dark, 0, 3.8, 0, b);
+      box(1.5, 1, 0.15, M.buoyRed, 0, 5.2, 0, b);
+      b.position.set(DAM_X + s*42, 0, slotZ(HERO_SLOT) + i*68);
+      b.userData.y0 = 0;
+      scene.add(b); buoys.push(b);
+    });
+  }
+  // đường giao thông nối hai vai đập (trên đê nối tiếp +7 m)
+  [-1, 1].forEach(s => box(8.3, 0.3, 190, M.road, 0, 7.2, s*1150, endsGrp));
+  // đơn nguyên chuyển tiếp dạng bậc, tựa mái đất bờ (z = ±981 → ±1061)
+  [-1, 1].forEach(s => {
+    const zs = s*(N_UNITS/2)*SLOT + s*0.5;
+    [[14, U.crest], [41, 3.4], [68, 2.0]].forEach(p => {
+      const hgt = p[1] + 12.4;
+      box(U.L, hgt, 27, M.concreteD, DAM_X, -12.4 + hgt/2, zs + s*p[0], endsGrp);
+    });
+  });
+})();
+
+// ============================================================
+//   B=150, L=50, H=16.99 · hộp đáy rỗng 5 m · 4 khoang 34,9 m
+//   trụ biên 2,5 / trụ giữa 1,8 · van phẳng 2 tầng (x=19/18,45)
+//   khung nâng portal 8 m · cầu công tác 10 m giữa đơn nguyên
+// Gốc nhóm: TÂM ĐÁY bản đáy (y cục bộ 0 = −11,59 thế giới)
+// ============================================================
+const PIER_Z = [-73.75, -36.7, 0, 36.7, 73.75];
+const PIER_W = [2.5, 1.8, 1.8, 1.8, 2.5];
+const BAY_Z  = [-55.05, -18.35, 18.35, 55.05];
+const X_GATE_LO = U.L/2 - U.gateInsetLo;     // 19,00
+const X_GATE_UP = U.L/2 - U.gateInsetUp;     // 18,45
+const PIER_H = U.crest - U.boxTop;           // 11,99
+const CREST_L = U.crest - U.zBed;            // 16,99 — đỉnh đập theo toạ độ CỤC BỘ (trên đáy)
+const LEAF_LO_H = 6.0, LEAF_UP_H = 6.49;
+
+function buildUnit(opts){
+  opts = opts || {};
+  const mm = opts.mats || M;
+  const conc = opts.fresh ? M.fresh : mm.concrete;
+  const mSteel = mm.steel || M.steel, mDark = mm.dark || M.dark,
+        mSheet = mm.sheet || M.sheet, mGina = mm.gina || M.gina;
+  const g = new THREE.Group();
+  g.userData.gatesLo = []; g.userData.gatesUp = [];
+
+  // ---- 1. Hộp đáy rỗng (khoang dằn) ----
+  const boxGrp = new THREE.Group(); g.add(boxGrp); g.userData.boxGrp = boxGrp;
+  if (opts.detail){
+    box(U.L, 1.0, U.B, conc, 0, 0.5, 0, boxGrp);                       // bản đáy 1,0
+    box(U.L, 1.0, U.B, conc, 0, 4.5, 0, boxGrp);                       // bản nắp 1,0
+    box(U.L, 3.0, 2.0, conc, 0, 2.5, -(U.B/2-1), boxGrp);              // tường chu vi 2,0
+    box(U.L, 3.0, 2.0, conc, 0, 2.5,  (U.B/2-1), boxGrp);
+    box(2.0, 3.0, U.B-4, conc, -(U.L/2-1), 2.5, 0, boxGrp);
+    box(2.0, 3.0, U.B-4, conc,  (U.L/2-1), 2.5, 0, boxGrp);
+    for (let k = -9; k <= 9; k++) box(U.L-4, 3.0, 0.45, conc, 0, 2.5, k*7.5, boxGrp);  // vách ngang ~7,5 m
+    for (let k = -2; k <= 2; k++) box(0.45, 3.0, U.B-4, conc, k*6, 2.5, 0, boxGrp);    // vách dọc ~6 m
+    // nắp thăm khoang dằn trên bản nắp
+    for (let i = -3; i <= 3; i++) for (let j = -1; j <= 1; j++)
+      box(1.4, 0.06, 1.4, mDark, j*14, 5.04, i*20+7, boxGrp);
+  } else {
+    box(U.L, U.boxH, U.B, conc, 0, U.boxH/2, 0, boxGrp);
+  }
+
+  // ---- 2. Trụ pin (5 trụ, mũi tròn phía sông) ----
+  const piers = new THREE.Group(); g.add(piers); g.userData.piers = piers;
+  PIER_Z.forEach((pz, i) => {
+    const w = PIER_W[i];
+    box(U.L, PIER_H, w, conc, 0, U.boxH + PIER_H/2, pz, piers);
+    cyl(w/2, w/2, PIER_H, conc, -U.L/2, U.boxH + PIER_H/2, pz, piers, 10);
+    if (opts.detail){                              // khe van trên má trụ
+      [X_GATE_LO, X_GATE_UP].forEach(gx => [-1,1].forEach(s =>
+        box(0.5, PIER_H, 0.5, mm.concreteD, gx, U.boxH + PIER_H/2, pz + s*(w/2+0.22), piers)));
+    }
+    // bít neo trên đỉnh trụ biên
+    if (i === 0 || i === 4)
+      [-18, 0, 18].forEach(bx => cyl(0.7, 0.9, 1.6, mDark, bx, CREST_L + 0.8, pz, piers));
+  });
+
+  const midGrp = new THREE.Group(); g.add(midGrp); g.userData.midGrp = midGrp;
+  const midY = U.mid - U.zBed;                       // 9,245 cục bộ
+  const mx0 = -U.L/2 + 3.0, mx1 = X_GATE_UP;         // hở mép phao thượng lưu → dừng tại khe van
+  (opts.oneTier ? [] : BAY_Z).forEach(bz => {
+    box(mx1-mx0, 0.3, U.bayW, conc, (mx0+mx1)/2, midY+0.15, bz, midGrp);
+    if (opts.detail){
+      for (let k = -2; k <= 2; k++)
+        box(mx1-mx0, 1.2, 0.4, conc, (mx0+mx1)/2, midY-0.6, bz + k*8, midGrp);
+      [[-12,-8],[ -12,8],[12,-8],[12,8],[0,0]].forEach(p =>
+        box(0.8, midY-U.boxH, 0.8, conc, p[0], (midY+U.boxH)/2, bz+p[1], midGrp));
+    }
+  });
+
+  // ---- 4. Cửa van phẳng + cáp (2 tầng: 2 lá/khoang — 1 tầng: 1 lá cao suốt) ----
+  const hoistTop = CREST_L + (opts.oneTier ? PIER_H + 0.7 : LEAF_UP_H) + U.hoistClear;
+  const gatesGrp = new THREE.Group(); g.add(gatesGrp); g.userData.gatesGrp = gatesGrp;
+  BAY_Z.forEach(bz => {
+    const leafW = U.bayW + 0.6;
+    if (opts.oneTier){
+      const h1 = PIER_H - 0.3;
+      const lo = box(0.65, h1, leafW, mm.gate, X_GATE_LO, U.boxH + h1/2, bz, gatesGrp);
+      lo.userData.y0 = U.boxH + h1/2;
+      lo.userData.lift = h1*0.97;
+      box(1.0, 0.8, leafW*0.92, mSteel, 0, h1/2 + 0.5, 0, lo);
+      [-leafW/3, leafW/3].forEach(cz => {
+        const c1 = box(0.14, 1, 0.14, mDark, 0, 0, 0, gatesGrp);
+        c1.userData = { leaf:lo, cz:bz+cz, gx:X_GATE_LO, top:hoistTop };
+        (g.userData.cables = g.userData.cables || []).push(c1);
+      });
+      g.userData.gatesLo.push(lo);
+      return;
+    }
+    const lo = box(0.65, LEAF_LO_H, leafW, mm.gate, X_GATE_LO, U.boxH + LEAF_LO_H/2, bz, gatesGrp);
+    const up = box(0.65, LEAF_UP_H, leafW, mm.gate, X_GATE_UP, CREST_L - LEAF_UP_H/2, bz, gatesGrp);
+    lo.userData.y0 = U.boxH + LEAF_LO_H/2;   lo.userData.lift = PIER_H*0.97;  // kéo suốt 2 tầng, treo trên đỉnh
+    up.userData.y0 = CREST_L - LEAF_UP_H/2;  up.userData.lift = LEAF_UP_H*0.97;
+    // dầm kéo van (thép) trên đỉnh mỗi lá
+    box(1.0, 0.8, leafW*0.92, mSteel, 0, LEAF_LO_H/2 + 0.5, 0, lo);
+    box(1.0, 0.8, leafW*0.92, mSteel, 0, LEAF_UP_H/2 + 0.5, 0, up);
+    // cáp nâng (2 sợi/lá)
+    [-leafW/3, leafW/3].forEach(cz => {
+      const c1 = box(0.14, 1, 0.14, mDark, 0, 0, 0, gatesGrp);
+      const c2 = box(0.14, 1, 0.14, mDark, 0, 0, 0, gatesGrp);
+      c1.userData = { leaf:lo, cz:bz+cz, gx:X_GATE_LO, top:hoistTop };
+      c2.userData = { leaf:up, cz:bz+cz, gx:X_GATE_UP, top:hoistTop };
+      (g.userData.cables = g.userData.cables || []).push(c1, c2);
+    });
+    g.userData.gatesLo.push(lo); g.userData.gatesUp.push(up);
+  });
+
+  // ---- 5. Khung nâng van (portal; biến thể 1 tầng cao hơn để rút lá van suốt) ----
+  const hoistGrp = new THREE.Group(); g.add(hoistGrp); g.userData.hoistGrp = hoistGrp;
+  PIER_Z.forEach((pz, i) => {
+    const w = Math.min(PIER_W[i], 1.8);
+    const legH = hoistTop - CREST_L;
+    [X_GATE_LO - U.hoistDepth/2 + U.hoistLegW/2, X_GATE_LO + U.hoistDepth/2 - U.hoistLegW/2]
+      .forEach(lx => box(U.hoistLegW, legH, w, conc, lx, CREST_L + legH/2, pz, hoistGrp));
+    box(U.hoistDepth, U.hoistBeamH, w, conc, X_GATE_LO, hoistTop + U.hoistBeamH/2, pz, hoistGrp);
+    box(U.hoistDepth - 1, 1.2, w + 1.4, mSteel, X_GATE_LO, hoistTop + U.hoistBeamH + 0.6, pz, hoistGrp); // tời điện
+  });
+  // dầm chạy dọc tuyến nối các portal (đường di chuyển thiết bị nâng)
+  [X_GATE_LO - 2.6, X_GATE_LO + 2.6].forEach(rx =>
+    box(0.8, 1.0, U.B - 3, mSteel, rx, hoistTop - 0.5, 0, hoistGrp));
+
+  // ---- 6. Cầu giao thông TRÊN CAO: trụ đỡ trên đỉnh trụ pin → dầm dọc → bản mặt ----
+  const brGrp = new THREE.Group(); g.add(brGrp); g.userData.brGrp = brGrp;
+  PIER_Z.forEach((pz, i) =>
+    box(U.bridgeW + 1, 1.4, Math.min(PIER_W[i], 2.2) + 0.6, conc, 0, CREST_L + 0.7, pz, brGrp)); // trụ đỡ
+  [-1,1].forEach(sd => box(0.6, 1.2, U.B, conc, sd*4.2, CREST_L + 2.0, 0, brGrp));               // dầm dọc
+  box(U.bridgeW, 0.45, U.B, conc, 0, CREST_L + 2.83, 0, brGrp);                                  // bản mặt
+  box(U.bridgeW - 1.7, 0.06, U.B, M.road, 0, CREST_L + 3.08, 0, brGrp);                          // mặt đường
+  [-1,1].forEach(sd => {
+    box(0.3, 1.1, U.B, mm.concreteD, sd*(U.bridgeW/2 - 0.15), CREST_L + 3.6, 0, brGrp);
+    for (let z = -U.B/2 + 3; z <= U.B/2 - 3; z += 8)
+      box(0.12, 1.0, 0.12, mSteel, sd*(U.bridgeW/2 - 0.15), CREST_L + 4.2, z, brGrp);
+    box(0.1, 0.12, U.B, mSteel, sd*(U.bridgeW/2 - 0.15), CREST_L + 4.75, 0, brGrp);
+  });
+  for (let z = -60; z <= 60; z += 30){
+    cyl(0.12, 0.16, 5, mSteel, -U.bridgeW/2 + 0.6, CREST_L + 5.4, z, brGrp, 8);
+    box(1.4, 0.2, 0.3, mSteel, -U.bridgeW/2 + 1.2, CREST_L + 7.9, z, brGrp);
+  }
+
+  // ---- 7. Tấm phao thượng lưu (bịt khi nổi/lai dắt – tháo khi vận hành) ----
+  const floatGrp = new THREE.Group(); g.add(floatGrp); g.userData.floatGrp = floatGrp;
+  BAY_Z.forEach(bz => {
+    const p = box(0.45, PIER_H, U.bayW + 0.5, mSheet, -U.L/2 + 0.5, U.boxH + PIER_H/2, bz, floatGrp);
+    for (let k = -2; k <= 2; k++)
+      box(0.6, 0.5, U.bayW + 0.5, mSteel, 0, k*2.6, 0, p);
+  });
+
+  // ---- 8. Gioăng GINA + khoá chống cắt hai đầu ----
+  const jointGrp = new THREE.Group(); g.add(jointGrp); g.userData.jointGrp = jointGrp;
+  [-1,1].forEach(s => {
+    box(U.L - 6, U.H - 2, 0.5, mGina, 0, U.H/2, s*(U.B/2 + 0.1), jointGrp);
+    [[-14, 3.2],[14, 3.2],[0, 12]].forEach(p =>
+      box(4, 4, 1.2, conc, p[0], p[1], s*(U.B/2 + 0.35), jointGrp));
+  });
+
+  // ---- 9. Khe phai sửa chữa + quan trắc + đèn hiệu (đơn nguyên chi tiết) ----
+  if (opts.detail){
+    const phaiGrp = new THREE.Group(); g.add(phaiGrp); g.userData.phaiGrp = phaiGrp;
+    PIER_Z.forEach((pz, i) => [-1, 1].forEach(sd => {
+      box(0.5, PIER_H, 0.5, mm.concreteD, 23.6, U.boxH + PIER_H/2, pz + sd*(PIER_W[i]/2 + 0.22), phaiGrp);
+      box(0.5, PIER_H, 0.5, mm.concreteD, 13.2, U.boxH + PIER_H/2, pz + sd*(PIER_W[i]/2 + 0.22), phaiGrp);
+    }));
+    const obsGrp = new THREE.Group(); g.add(obsGrp); g.userData.obsGrp = obsGrp;
+    [-1, 1].forEach(sd => {
+      const pz = sd*(U.B/2 - 1.25);
+      box(0.12, PIER_H, 0.8, mDark, -8, U.boxH + PIER_H/2, pz + sd*1.6, obsGrp);     // thang thép
+      for (let y = U.boxH + 1; y < CREST_L; y += 1.2)
+        box(0.55, 0.08, 0.7, mDark, -8, y, pz + sd*1.6, obsGrp);
+      const tc = box(0.18, 14, 1.0, M.white, -U.L/2 + 0.7, U.boxH + 7, pz + sd*1.5, obsGrp); // thuỷ chí
+      for (let k = 0; k < 7; k++)
+        box(0.06, 1.0, 1.02, k % 2 ? M.buoyRed : M.dark, 0.1, -6.2 + k*2, 0, tc);
+    });
+    const lampGrp = new THREE.Group(); g.add(lampGrp); g.userData.lampGrp = lampGrp;
+    [-1, 1].forEach(sd => {
+      const pz = sd*(U.B/2 - 1.25);
+      cyl(0.1, 0.13, 2.4, mSteel, X_GATE_LO, hoistTop + U.hoistBeamH + 2.4, pz, lampGrp, 8);
+      box(0.75, 0.95, 0.75, sd > 0 ? M.lampG : M.lampR, X_GATE_LO, hoistTop + U.hoistBeamH + 3.95, pz, lampGrp);
+    });
+  }
+  g.traverse(o => { o.castShadow = true; o.receiveShadow = true; });
+  return g;
+}
+// cập nhật cáp van theo vị trí lá van
+function updateCables(u){
+  (u.userData.cables || []).forEach(c => {
+    const d = c.userData, top = d.top, leafTop = d.leaf.position.y +
+      (d.leaf.geometry.parameters.height)/2 + 0.9;   // cáp nối vào dầm kéo van
+    const len = Math.max(0.3, top - leafTop);
+    c.position.set(d.gx, leafTop + len/2, d.cz);
+    c.scale.y = len;
+  });
+}
+function setGates(u, gLo, gUp){
+  u.userData.gatesLo.forEach(l => l.position.y = l.userData.y0 + l.userData.lift*gLo);
+  u.userData.gatesUp.forEach(l => l.position.y = l.userData.y0 + l.userData.lift*gUp);
+  updateCables(u);
+}
+// ---- cặp biến thể 2 TẦNG / 1 TẦNG trong một "vỏ" chung ----
+function makeUnitPair(opts){
+  const c = new THREE.Group();
+  const u2 = buildUnit(opts);
+  const u1 = buildUnit(Object.assign({ oneTier:true }, opts));
+  u1.visible = false;
+  c.add(u2, u1);
+  c.userData = u2.userData;
+  c.userData.variants = [u1, u2];
+  [u1, u2].forEach(v => setGates({ userData:v.userData }, 0, 0));
+  return c;
+}
+let TIER = 2;
+function setTier(n){
+  TIER = n;
+  allUnits.forEach(c => {
+    const v = c.userData.variants;
+    v[0].visible = n === 1; v[1].visible = n === 2;
+    const act = n === 1 ? v[0] : v[1];
+    c.userData = act.userData;
+    c.userData.variants = v;
+    setGates(c, cur.gLo, cur.gUp);
+  });
+  document.querySelectorAll('#tierBar .mode').forEach(el =>
+    el.classList.toggle('on', +el.dataset.t === n));
+}
+
+// ---- 12 đơn nguyên đã đánh chìm + đơn nguyên CHÍNH (khe giữa) ----
+const placedUnits = [];
+const LOCK_SLOT = 2, lockZ = slotZ(LOCK_SLOT);
+for (let i = 0; i < N_UNITS; i++){
+  if (i === HERO_SLOT || i === LOCK_SLOT) continue;
+  const u = makeUnitPair({ detail: Math.abs(i - HERO_SLOT) <= 1 });
+  u.position.set(DAM_X, U.zBed, slotZ(i));
+  u.userData.variants.forEach(v => v.userData.floatGrp.visible = false);
+  scene.add(u); placedUnits.push(u);
+}
+// ---- ÂU THUYỀN (duy trì giao thông thuỷ qua tuyến) ----
+let lockGrp = null, boatGrp = null, liftGrp = null;
+(function buildLock(){
+  const g = new THREE.Group(); lockGrp = g;
+  [-1,1].forEach(s => {
+    box(244, 17.6, 9, M.concrete, 0, 8.8, s*19.5, g);
+    box(246, 1.2, 10, M.concreteD, 0, 18.2, s*19.5, g);
+    for (let x = -100; x <= 100; x += 40) cyl(0.7, 0.9, 1.5, M.dark, x, 19.4, s*19.5, g);
+    [-1,1].forEach(e => {
+      const w = box(70, 16, 6, M.concreteD, e*157, 8, s*(19.5 + 14), g);
+      w.rotation.y = -e*s*0.30;
+    });
+  });
+  [-88, 88].forEach(x => box(2.2, 18.5, 31, M.gate, x, 9.25, 0, g));
+  // hai ĐƠN NGUYÊN HỘP CHÌM THU NGẮN (51,6 m) nối tiếp tự nhiên hai bên buồng âu
+  [-1, 1].forEach(sd => {
+    const zc = sd*49.75, W = 51.6;
+    const u = new THREE.Group();
+    box(U.L, U.boxH, W, M.concrete, 0, U.boxH/2, 0, u);                    // hộp đáy rỗng
+    [-1, 1].forEach(e => {                                                  // 2 trụ biên mũi tròn
+      box(U.L, PIER_H, 2.5, M.concrete, 0, U.boxH + PIER_H/2, e*(W/2 - 1.25), u);
+      cyl(1.25, 1.25, PIER_H, M.concrete, -U.L/2, U.boxH + PIER_H/2, e*(W/2 - 1.25), u, 10);
+    });
+    box(U.L - 2, PIER_H, W - 5.5, M.concreteD, -1, U.boxH + PIER_H/2, 0, u); // thân khoang BỊT (lùi 1 m)
+    box(U.L + 0.6, 0.6, W + 0.4, M.concreteD, 0, U.boxH + PIER_H + 0.3, 0, u); // mũ đỉnh +5,4
+    [-14, 14].forEach(bx => cyl(0.7, 0.9, 1.6, M.dark, bx, U.boxH + PIER_H + 1.4, 0, u));
+    [-1, 1].forEach(e => box(U.L - 6, U.H - 2, 0.5, M.gina, 0, U.H/2, e*(W/2 + 0.1), u)); // GINA 2 đầu
+    u.position.set(0, 0, zc);
+    g.add(u);
+  });
+  const tw = box(9, 7, 7, M.white, 36, 21.8, 19.5, g);
+  box(9.4, 1.6, 7.4, M.dark, 0, 1.8, 0, tw);
+  box(9.6, 0.5, 7.6, M.steelRed, 0, 3.8, 0, tw);
+  g.position.set(DAM_X, U.zBed, lockZ);
+  g.traverse(o => { o.castShadow = o.receiveShadow = true; });
+  scene.add(g);
+  const b = new THREE.Group(); boatGrp = b;
+  box(30, 3.4, 7.6, M.hullBlk, 0, 0.4, 0, b);
+  box(28.5, 1.6, 7.0, M.steelRed, 0, 2.6, 0, b);
+  box(6, 3.4, 6, M.white, -10, 5.2, 0, b);
+  box(20, 1.2, 6.4, M.yellow, 4, 3.6, 0, b);
+  b.position.set(-25, -1.2, lockZ);
+  b.traverse(o => { o.castShadow = true; });
+  scene.add(b);
+})();
+// ---- cầu giao thông CỐ ĐỊNH vượt âu thuyền (liền tuyến, tĩnh không ~7,5 m) ----
+(function lockBridge(){
+  const g = new THREE.Group(); liftGrp = g;
+  const Yd = U.zBed + CREST_L + 2.83;                  // +8,23 — cùng cao độ mặt cầu các đơn nguyên
+  [-1, 1].forEach(sd => box(0.6, 1.2, 154, M.concrete, sd*4.2, Yd - 0.85, 0, g));   // dầm dọc
+  box(U.bridgeW, 0.45, 154, M.concrete, 0, Yd, 0, g);
+  box(U.bridgeW - 1.7, 0.06, 154, M.road, 0, Yd + 0.26, 0, g);
+  [-1, 1].forEach(sd => {
+    box(0.3, 1.1, 154, M.concreteD, sd*(U.bridgeW/2 - 0.15), Yd + 0.8, 0, g);
+    box(0.1, 0.12, 154, M.steel, sd*(U.bridgeW/2 - 0.15), Yd + 1.4, 0, g);
+  });
+  // trụ đỡ trên hai tường âu và hai khối bịt
+  [-49.75, -19.5, 19.5, 49.75].forEach(zz =>
+    box(U.bridgeW + 1, 2.5, 2.6, M.concrete, 0, Yd - 2.1, zz, g));
+  g.position.set(DAM_X, 0, lockZ);
+  g.traverse(o => { o.castShadow = o.receiveShadow = true; });
+  scene.add(g);
+})();
+// ---- nối nhịp cầu qua khe ghép giữa các đơn nguyên + dốc dẫn hai vai ----
+const linksGrp = new THREE.Group(); scene.add(linksGrp);
+(function bridgeLinks(){
+  const bridgeY = U.zBed + CREST_L + 2.83;            // = +8,23 (thế giới)
+  for (let i = 1; i <= N_UNITS - 1; i++){
+    if (i === LOCK_SLOT || i === LOCK_SLOT + 1) continue;   // qua âu dùng nhịp nâng
+    const zb = (i - 6)*SLOT - SLOT/2;
+    box(U.bridgeW, 0.5, 2.6, M.concreteD, DAM_X, bridgeY, zb, linksGrp);
+    box(U.bridgeW - 1.7, 0.07, 2.6, M.road, DAM_X, bridgeY + 0.3, zb, linksGrp);
+  }
+  [-1, 1].forEach(sg => {
+    const r = box(U.bridgeW, 0.4, 206, M.concreteD, DAM_X, (8.25 + 7.35)/2, sg*1080, linksGrp);
+    r.rotation.x = sg*0.0046;                          // dốc dẫn xuống đường vai đập
+    box(U.bridgeW - 1.7, 0.07, 206, M.road, 0, 0.25, 0, r);
+  });
+})();
+// vật liệu riêng cho đơn nguyên chính (phục vụ mặt cắt khám phá)
+const clipPlane  = new THREE.Plane(new THREE.Vector3(0, 0, -1), 1e6);   // giữ z < c1
+const clipPlane2 = new THREE.Plane(new THREE.Vector3(0, 0,  1), 1e6);   // giữ z > −c2
+const matsHero = {};
+['concrete','concreteD','gate','steel','dark','sheet','gina'].forEach(k => {
+  matsHero[k] = M[k].clone();
+  matsHero[k].clippingPlanes = [clipPlane, clipPlane2];
+  matsHero[k].clipShadows = true;
+});
+const hero = makeUnitPair({ detail:true, mats:matsHero });
+hero.position.set(HERO_START.x, HERO_START.y, HERO_START.z);
+scene.add(hero);
+const allUnits = placedUnits.concat([hero]);
+allUnits.forEach(u => { setGates(u, 0, 0); });
+
+// ---- Đơn nguyên đang đúc dở trong bãi (hộp đáy + thép chờ) ----
+(function partial(){
+  const p = new THREE.Group();
+  box(U.L, U.boxH, U.B, M.fresh, 0, U.boxH/2, 0, p);
+  PIER_Z.forEach((pz, i) => box(U.L, 3.5, PIER_W[i], M.fresh, 0, U.boxH + 1.75, pz, p));
+  for (let z = -70; z <= 70; z += 4.6){
+    cyl(0.09, 0.09, 4.5, M.rebar, -U.L/2 + 1.5, U.boxH + 4.5, z, p, 5);
+    cyl(0.09, 0.09, 4.5, M.rebar,  U.L/2 - 1.5, U.boxH + 4.5, z, p, 5);
+  }
+  box(0.4, 9, U.B + 1, M.yellow, -(U.L/2 + 0.45), 4.5, 0, p);
+  box(0.4, 9, U.B + 1, M.yellow,  (U.L/2 + 0.45), 4.5, 0, p);
+  p.position.set(PIT.x + 42, PIT.floor + 0.2, PIT.z + 0);
+  p.traverse(o => { o.castShadow = o.receiveShadow = true; });
+  scene.add(p);
+})();
+
+// ---- Cần trục tháp trong bãi đúc ----
+const crane = new THREE.Group();
+(function buildCrane(){
+  box(9, 2.2, 9, M.concreteD, 0, 1.1, 0, crane);
+  box(3, 64, 3, M.yellow, 0, 34, 0, crane);
+  const slew = new THREE.Group(); slew.position.y = 66; crane.add(slew);
+  crane.userData.slew = slew;
+  box(2.6, 3, 2.6, M.yellow, 0, 0, 0, slew);
+  box(62, 1.8, 2, M.yellow, 25, 2.2, 0, slew);
+  box(17, 1.8, 2, M.yellow, -11, 2.2, 0, slew);
+  box(4, 3.2, 3.2, M.concreteD, -17, 1.2, 0, slew);
+  box(1.8, 2.2, 2, M.white, 3.2, -0.9, 0, slew);
+  box(1.6, 9, 1.6, M.yellow, 0, 7, 0, slew);
+  const lm = new THREE.LineBasicMaterial({ color:0x1a1a1a });
+  const mk = (a,b) => slew.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([a,b]), lm));
+  mk(new THREE.Vector3(0,11.5,0), new THREE.Vector3(52,3.1,0));
+  mk(new THREE.Vector3(0,11.5,0), new THREE.Vector3(-17,3.1,0));
+  const hook = new THREE.Group(); hook.position.set(38, 1.4, 0); slew.add(hook);
+  crane.userData.hook = hook;
+  hook.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(
+    [new THREE.Vector3(0,0,0), new THREE.Vector3(0,-26,0)]), lm));
+  box(1.6, 2.2, 1.6, M.dark, 0, -27, 0, hook);
+  crane.position.set(PIT.x + 78, PIT.floor + 0.2, PIT.z - 88);
+  crane.traverse(o => { o.castShadow = true; });
+  scene.add(crane);
+})();
+
+// ---- Tàu lai dắt (3 chiếc ~26 m) + dây cáp ----
+function buildTug(){
+  const t = new THREE.Group();
+  box(16, 2.6, 6, M.hullBlk, 0, -0.3, 0, t);
+  box(15.6, 1.2, 5.6, M.hullRed, 0, -1.6, 0, t);
+  const bow = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 2.6, 3, 1), M.hullBlk);
+  bow.rotation.y = Math.PI; bow.position.set(8.8, -0.3, 0); bow.scale.x = 1.4;
+  bow.castShadow = true; t.add(bow);
+  box(16.4, 0.35, 6.4, M.concreteD, 0, 1.15, 0, t);
+  for (let i = -1; i <= 1; i++) [-3.25, 3.25].forEach(s => {
+    const tire = new THREE.Mesh(new THREE.TorusGeometry(0.85, 0.32, 6, 12), M.dark);
+    tire.position.set(i*5, -0.2, s); tire.rotation.y = Math.PI/2; t.add(tire);
+  });
+  box(6, 2.2, 4.4, M.white, -1, 2.4, 0, t);
+  const wh = box(4.4, 2.2, 3.6, M.white, -0.6, 4.6, 0, t);
+  box(4.5, 0.9, 3.7, M.dark, 0, 0.35, 0, wh);
+  cyl(0.55, 0.7, 2.6, M.steelRed, -4.2, 4.2, 0, t);
+  cyl(0.08, 0.08, 3.4, M.dark, 1.8, 6.8, 0, t, 5);
+  box(0.5, 0.35, 0.5, M.yellow, 1.8, 8.6, 0, t);
+  cyl(0.8, 0.8, 1.8, M.steel, -6.4, 1.8, 0, t).rotation.x = Math.PI/2;
+  t.traverse(o => { o.castShadow = true; });
+  t.scale.setScalar(1.7);
+  return t;
+}
+const tugs = [buildTug(), buildTug(), buildTug()];
+tugs.forEach(t => { t.visible = false; scene.add(t); });
+const ropeMat = new THREE.LineBasicMaterial({ color:0x141414 });
+const ropes = tugs.map(() => {
+  const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(
+    [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()]), ropeMat);
+  l.visible = false; scene.add(l);
+  return l;
+});
+function setRope(i, a, b){
+  const r = ropes[i];
+  const mid = a.clone().lerp(b, 0.5); mid.y -= a.distanceTo(b)*0.04;
+  const p = r.geometry.attributes.position;
+  p.setXYZ(0,a.x,a.y,a.z); p.setXYZ(1,mid.x,mid.y,mid.z); p.setXYZ(2,b.x,b.y,b.z);
+  p.needsUpdate = true; r.visible = true;
+}
+
+// ---- Hạt: bọt khí đánh chìm + dòng chảy qua cống ----
+function makePoints(n, color, size, opacity){
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n*3), 3));
+  const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color, size,
+    transparent:true, opacity, depthWrite:false, sizeAttenuation:true }));
+  pts.visible = false; pts.renderOrder = 2; scene.add(pts);
+  return pts;
+}
+const bubbles = makePoints(420, 0xeaf8ff, 2.6, 0.8); bubbles.frustumCulled = false;
+const bubbleSeed = new Float32Array(420*4).map(() => Math.random());
+// dòng chảy kiểu WINDY: vệt sao chổi — mỗi hạt mang 10 điểm lịch sử, đầu sáng đuôi tan
+const FLOW_MAXN = 3600, TRAIL = 16, SEGN = FLOW_MAXN*(TRAIL - 1);
+let flowN = 1400, flowRec = 4, flowBright = 1.2, flowPrevN = FLOW_MAXN;
+const flowGeo = new THREE.BufferGeometry();
+flowGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(SEGN*6), 3));
+flowGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(SEGN*6), 3));
+const flow = new THREE.LineSegments(flowGeo, new THREE.LineBasicMaterial({
+  vertexColors:true, transparent:true, opacity:0.9, depthWrite:false,
+  blending:THREE.AdditiveBlending }));
+flow.visible = false; flow.renderOrder = 3; flow.frustumCulled = false; scene.add(flow);
+const flowHist = new Float32Array(FLOW_MAXN*TRAIL*3);
+const flowLaneIdx = new Int16Array(FLOW_MAXN);
+const flowLife = new Float32Array(FLOW_MAXN);
+const flowJit = new Float32Array(FLOW_MAXN).map(() => 0.55 + Math.random()*0.9);
+let flowTick = 0;
+const rippleMat = new THREE.MeshBasicMaterial({ color:0xe4f4fc, transparent:true,
+  opacity:0, side:THREE.DoubleSide, depthWrite:false });
+const ripple = new THREE.Mesh(new THREE.RingGeometry(1, 1.14, 48), rippleMat);
+ripple.rotation.x = -Math.PI/2; ripple.position.y = 0.4; scene.add(ripple);
+
+// ---- Đăng ký BỘ PHẬN cho chế độ Khám phá ----
+const PARTS = [
+  { name:'Hộp đáy rỗng (khoang dằn)', node:'boxGrp',
+    desc:'Hộp BTCT cao 5,0 m chia ô bởi vách dọc/ngang (ô ~5 m). Khi lai dắt để rỗng tạo lực nổi; khi đánh chìm bơm nước dằn; khi vận hành chứa cát dằn (phương án khuyến nghị). Bản đáy và bản nắp dày 1,0 m, tường chu vi 2,0 m.',
+    anchor:[0, 2.5, 25], dist:120 },
+  { name:'Trụ pin (biên 2,5 m · giữa 1,8 m)', node:'piers',
+    desc:'5 trụ chạy suốt L=50 m, từ nắp hộp đáy (−6,59) tới đỉnh +5,40. Trụ rỗng có sườn (giảm trọng lượng nổi). Mũi trụ phía sông lượn tròn giảm cản dòng. Má trụ có khe van 2 tầng.',
+    anchor:[-15, 11, -36.7], dist:110 },
+  { name:'Khoang cống 34,9 m × 4', node:'piers',
+    desc:'Mỗi đơn nguyên có 4 khoang thông nước rộng thông thuỷ 34,9 m — toàn tuyến 48 khoang cống cùng 1 âu thuyền. Dòng chảy hai chiều đi qua khoang khi mở van.',
+    anchor:[0, 9, -18.35], dist:130 },
+  { name:'Cửa van phẳng 2 tầng', node:'gatesGrp',
+    desc:'Mỗi khoang có 2 lá van thép phẳng đặt cách mép biển 6,0 m (gate_inset theo cấu hình thiết kế — đặt gần mép hạ lưu để buồng van ngắn, thiết bị nâng dồn về một phía, mặt thượng lưu dành cho khe tấm phao): lá DƯỚI chắn tầng dưới, lá TRÊN chắn tầng trên, gối chồng 0,5 m. Bản mặt + dầm chính ngang bố trí dày ở đáy (áp lực lớn). Vận hành độc lập: tiêu nước đáy, lấy nước mặt, hoặc đóng kín.',
+    anchor:[X_GATE_LO, 11, 18.35], dist:90 },
+  { name:'Khung nâng van (portal)', node:'hoistGrp',
+    desc:'Trên mỗi trụ pin: 2 chân + 1 dầm ngang (khẩu độ 8 m theo dòng chảy), tĩnh không +2 m trên lá van đã kéo. Tời điện đặt trên dầm, cáp đôi mỗi lá van.',
+    anchor:[X_GATE_LO, U.H + 6, 0], dist:95 },
+  { name:'Cầu giao thông (rộng 10 m)', node:'brGrp',
+    desc:'Cầu BTCT giữa đơn nguyên (x=25 m của L=50 m) chạy suốt tuyến, nối vào đường hai vai đập: dầm biên 1,0 m, bản 0,45 m, mặt đường 2 làn xe, lan can 1,1 m — đập kết hợp giao thông bộ. Cầu chạy LIỀN TUYẾN qua cả âu thuyền (tĩnh không ~7,5 m cho ghe, sà lan).',
+    anchor:[0, U.H + 3.5, -40], dist:110 },
+  { name:'Sàn trung gian −0,595 m', node:'midGrp',
+    desc:'Sàn dầm–bản (bản 0,30 m, dầm 1,2×0,4 m, lưới 8×8 m, 5 cột/khoang) chia kết cấu 2 tầng theo điều kiện H>12 m; mép thượng lưu chừa 3,0 m cho khe tấm phao, phía biển dừng tại khe van.',
+    anchor:[-3, 9.4, 18.35], dist:80 },
+  { name:'Tấm phao thượng lưu', node:'floatGrp',
+    desc:'Tấm thép (cừ + dầm) bịt mặt thượng lưu các khoang khi chế tạo nổi và lai dắt — tạo hộp kín nước tới đỉnh +5,40. Sau khi đánh chìm và ghép xong thì THÁO RA để khoang thông nước.',
+    anchor:[-U.L/2, 11, -18.35], dist:100 },
+  { name:'Gioăng GINA + khoá chống cắt', node:'jointGrp',
+    desc:'Chu vi hai đầu B có gioăng cao su GINA: ép nước khe nối tạo chênh áp nén kín. Khoá chống cắt BTCT truyền lực cắt giữa các đơn nguyên, giữ tuyến thẳng khi lún lệch.',
+    anchor:[0, 8, 75], dist:85 },
+  { name:'Khe phai sửa chữa', node:'phaiGrp',
+    desc:'Hai hàng khe phai trên má trụ — phía trước và sau buồng van. Khi cần bảo dưỡng, thả phai thép vào khe, bơm cạn buồng giữa hai hàng phai rồi sửa chữa/thay lá van trong điều kiện khô, không phải hạ mực nước vận hành.',
+    anchor:[18, 11, 36.7], dist:75 },
+  { name:'Thang & thuỷ chí quan trắc', node:'obsGrp',
+    desc:'Thang thép lên xuống sàn vận hành; thuỷ chí vạch đỏ–trắng (mỗi vạch 1 m) trên trụ biên để đọc nhanh mực nước hai phía; kèm vị trí mốc quan trắc lún và đo áp lực kẽ rỗng — quan trọng với nền sét yếu Hàm Luông.',
+    anchor:[-20, 8, 73], dist:65 },
+  { name:'Đèn hiệu hàng hải', node:'lampGrp',
+    desc:'Đèn xanh/đỏ trên đỉnh khung nâng hai trụ biên: đánh dấu giới hạn công trình và hướng luồng cho tàu thuyền ban đêm, đồng bộ với hệ thống báo hiệu của âu thuyền.',
+    anchor:[X_GATE_LO, U.H + 11, -73], dist:85 },
+  { name:'Âu thuyền (buồng 30 m)', node:null, lockPart:true,
+    desc:'Bố trí thay một đơn nguyên cống ở phần luồng sâu phía nam: buồng âu thông thuỷ rộng 30 m giữa hai tường BTCT đỉnh +8, hai đầu là cửa âu thép, tường dẫn hướng loe hai phía. Hai bên buồng âu là hai ĐƠN NGUYÊN HỘP CHÌM THU NGẮN 51,6 m (khoang bịt, không van) — nối tiếp đồng dạng với tuyến đập, kín nước hoàn toàn. Khi đập đóng ngăn mặn, tàu thuyền qua tuyến bằng âu — duy trì vận tải thuỷ Hàm Luông.',
+    anchor:[0, 8, 0], dist:430 },
+  { name:'Nền: hào nạo vét + đệm đá + cừ', node:null,
+    desc:'Hào nạo vét tới −12,4 m, lớp đệm đá dăm san phẳng 0,6 m (đỉnh −11,59 = đáy bản đáy). Cừ chống thấm sâu 18 m đóng dọc tuyến tại đường van phía biển, cắt dòng thấm dưới đáy. Nền sét yếu Hàm Luông cần xử lý sâu.',
+    anchor:[X_GATE_LO, -4, 0], dist:140 }
+];
+
+// ============================================================
+// BA CHẾ ĐỘ: 0 Thi công · 1 Vận hành · 2 Khám phá
+// ============================================================
+const STAGES = [
+  { name:'Toàn cảnh tuyến đập', dur:10,
+    desc:'Cửa sông Hàm Luông rộng ≈ 2,1 km. Tuyến đập gồm 12 đơn nguyên cống hộp chìm (B=150 m · 48 khoang) và 1 âu thuyền, hai đầu là đơn nguyên chuyển tiếp tựa mái bờ. 12 đơn nguyên đã đánh chìm, chừa khe chờ ở giữa. Trên bờ nam là hố móng – bãi đúc.' },
+  { name:'Chế tạo trong hố móng', dur:11,
+    desc:'Đơn nguyên BTCT 150×50×16,99 m được đúc trong hố móng khô: hộp đáy rỗng 5,0 m chia ô, 5 trụ pin, sàn trung gian −0,595, khe van 2 tầng. Mặt thượng lưu bịt tấm phao thép, mặt biển hạ sẵn cửa van — tạo hộp kín nước.' },
+  { name:'Bơm nước – cho nổi', dur:12,
+    desc:'Bơm nước vào hố móng. Nhờ hộp đáy rỗng và hai mặt bịt kín, đơn nguyên 30.000 tấn tự nổi với mớn nước ≈ 8 m khi cột nước vượt mớn. Phai đê quây hạ xuống, mở luồng dắt ra sông.' },
+  { name:'Lai dắt ra tuyến', dur:16,
+    desc:'Hai tàu lai phía trước, một tàu ghìm phía sau, kéo đơn nguyên theo luồng đã nạo vét ra giữa sông; đoạn cuối dùng tời neo chỉnh hộp đi ngang (warping) vào thẳng khe chờ giữa hai đơn nguyên lân cận.' },
+  { name:'Đánh chìm', dur:12,
+    desc:'Bơm nước dằn vào các ô của hộp đáy, đơn nguyên chìm dần ~3,5 m xuống hào nạo vét, đáy bản đặt đúng cao trình −11,59 m trên lớp đệm đá dăm đã san phẳng. Định vị bằng tời neo + phao tiêu, sai số khe nối kiểm soát bằng dẫn hướng.' },
+  { name:'Ghép nối', dur:10,
+    desc:'Ép nước khe nối: bơm cạn khoang giữa hai gioăng GINA, chênh áp nước ép hai đơn nguyên khít lại; khoá chống cắt ăn khớp truyền lực. Thay nước dằn bằng cát dằn (phương án khuyến nghị) bảo đảm ổn định trượt.' },
+  { name:'Hoàn thiện – thông nước', dur:13,
+    desc:'Tháo tấm phao thượng lưu — 48 khoang cống thông nước, âu thuyền mở luồng trở lại. Kéo thử cửa van: lá dưới tiêu nước đáy, lá trên lấy/tràn nước mặt. Công trình chuyển sang giai đoạn vận hành điều tiết.' }
+];
+const TOTAL = STAGES.reduce((s,x) => s + x.dur, 0);
+const stageStart = []; { let a = 0; STAGES.forEach(s => { stageStart.push(a); a += s.dur; }); }
+
+// ---------- trạng thái mượt (tránh giật khi đổi kịch bản) ----------
+const cur = { sea:0.0, river:0.0, mix:0, seaAmp:0.9, rivAmp:0.6, gLo:0, gUp:0, plates:1, salt:0 };
+const tgt = Object.assign({}, cur);
+let statusLine = '';
+
+// ---------- tuyến lai dắt ----------
+const towCurve = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(HERO_START.x, 0, HERO_START.z),
+  new THREE.Vector3(-612, 0, -1160),
+  new THREE.Vector3(-600, 0, -1085),
+  new THREE.Vector3(-596, 0, -1000),
+  new THREE.Vector3(-575, 0, -880),
+  new THREE.Vector3(-510, 0, -720),
+  new THREE.Vector3(-400, 0, -540),
+  new THREE.Vector3(-280, 0, -370),
+  new THREE.Vector3(-185, 0, -215),
+  new THREE.Vector3(-130, 0, -85),
+  new THREE.Vector3(-60, 0, -8),
+  new THREE.Vector3(0, 0, 0)
+]);
+const v3a = new THREE.Vector3(), v3b = new THREE.Vector3();
+
+// ============================================================
+// CHẾ ĐỘ 0 — THI CÔNG (hàm trạng thái theo giai đoạn)
+// ============================================================
+function applyConstruction(stage, t, time){
+  const bob = Math.sin(time*1.1)*0.22;
+  tgt.mix = 0; tgt.sea = 0.0; tgt.river = 0.0; tgt.seaAmp = 0.9; tgt.rivAmp = 0.7;
+  tgt.salt = 0;
+  tgt.gLo = stage === 6 ? easeIO((t-0.45)/0.4) : 0;
+  tgt.gUp = 0;
+  tgt.plates = stage === 6 ? 1 - easeIO((t-0.05)/0.35) : 1;
+
+  let dockY = PIT.floor + 0.3, gateY = -4.2;
+  if (stage === 2){
+    dockY = lerp(PIT.floor+0.3, 0.3, easeIO(t/0.55));
+    if (t > 0.55) gateY = lerp(-4.2, -24, easeIO((t-0.55)/0.3));
+  } else if (stage > 2){ dockY = 0.3; gateY = -24; }
+  dockWater.position.y = dockY;
+  cofferGate.position.y = gateY;
+
+  let hx = HERO_START.x, hy = HERO_START.y, hz = HERO_START.z, hrot = 0;
+  if (stage === 2){
+    const fl = ease(clamp01((dockY - PIT.floor - FLOAT_DRAFT - 0.3)/1.2));
+    hy = lerp(HERO_START.y, -FLOAT_DRAFT + bob*fl, fl);
+  } else if (stage === 3){
+    const u = easeIO(t);
+    towCurve.getPointAt(u, v3a);
+    hx = v3a.x; hz = v3a.z; hy = -FLOAT_DRAFT + bob;
+    towCurve.getTangentAt(Math.min(u, 0.995), v3b);
+    let yaw = Math.atan2(v3b.x, v3b.z);
+    if (t > 0.68) yaw *= 1 - easeIO((t-0.68)/0.22);
+    hrot = yaw;
+  } else if (stage === 4){
+    hx = DAM_X; hz = 0;
+    const sink = easeIO(clamp01((t-0.08)/0.78));
+    hy = lerp(-FLOAT_DRAFT + bob*(1-sink), U.zBed, sink);
+  } else if (stage >= 5){ hx = DAM_X; hz = 0; hy = U.zBed; }
+  hero.position.set(hx, hy, hz);
+  hero.rotation.y = hrot;
+
+  const tugsOn = stage === 3 || stage === 4 || (stage === 5 && t < 0.4);
+  tugs.forEach(tg => tg.visible = tugsOn);
+  ropes.forEach(r => r.visible = false);
+  if (tugsOn){
+    const tb = i => Math.sin(time*1.5 + i*2.1)*0.3;
+    if (stage === 3){
+      const u = easeIO(t);
+      const ahead = Math.min(1, u + 0.035);
+      towCurve.getPointAt(ahead, v3a); towCurve.getTangentAt(Math.min(ahead, 0.995), v3b);
+      const nx = v3b.z, nz = -v3b.x;
+      for (let i = 0; i < 2; i++){
+        const sd = i ? 1 : -1;
+        tugs[i].position.set(v3a.x + nx*sd*45 + v3b.x*40, tb(i), v3a.z + nz*sd*45 + v3b.z*40);
+        tugs[i].rotation.set(Math.sin(time*1.2+i)*0.02, Math.atan2(v3b.x, v3b.z) - Math.PI/2, Math.sin(time*1.4+i)*0.03);
+        const ax = hero.position.x + Math.cos(hrot)*(sd*20) + Math.sin(hrot)*72;
+        const az = hero.position.z - Math.sin(hrot)*(sd*20) + Math.cos(hrot)*72;
+        setRope(i, new THREE.Vector3(tugs[i].position.x, 2.6, tugs[i].position.z),
+                   new THREE.Vector3(ax, hero.position.y + U.H + 0.8, az));
+      }
+      towCurve.getPointAt(Math.max(0, u - 0.03), v3a);
+      tugs[2].position.set(v3a.x - v3b.x*95, tb(2), v3a.z - v3b.z*95);
+      tugs[2].rotation.y = Math.atan2(v3b.x, v3b.z) - Math.PI/2;
+      setRope(2, new THREE.Vector3(tugs[2].position.x, 2.6, tugs[2].position.z),
+                 new THREE.Vector3(hero.position.x - Math.sin(hrot)*72,
+                   hero.position.y + U.H + 0.8, hero.position.z - Math.cos(hrot)*72));
+    } else {
+      const leave = stage === 5 ? easeIO(t/0.4)*700 : 0;
+      const spots = [[-170, -65], [-170, 65], [150, 0]];
+      spots.forEach((p, i) => {
+        tugs[i].position.set(DAM_X + p[0] + (p[0]>0?leave:-leave*0.5), tb(i), p[1]*1.4 + (i===2?leave*0.2:0));
+        tugs[i].rotation.set(0, p[0] > 0 ? 0 : Math.PI, 0);
+        if (stage === 4)
+          setRope(i, new THREE.Vector3(tugs[i].position.x, 2.6, tugs[i].position.z),
+                     new THREE.Vector3(hero.position.x + (p[0]>0?23:-23),
+                       Math.max(hero.position.y + U.H + 0.8, 2), hero.position.z + (i<2 ? (i?60:-60) : 0)));
+      });
+    }
+  }
+
+  const sinking = stage === 4 && t > 0.06 && t < 0.92;
+  bubbles.visible = sinking;
+  if (sinking){
+    const pos = bubbles.geometry.attributes.position;
+    for (let i = 0; i < pos.count; i++){
+      const s0=bubbleSeed[i*4], s1=bubbleSeed[i*4+1], s2=bubbleSeed[i*4+2], s3=bubbleSeed[i*4+3];
+      const cyc = (time*0.3*(0.6+s3) + s0*7) % 1;
+      pos.setXYZ(i,
+        DAM_X + (s1-0.5)*U.L*1.4 + Math.sin(time*2+i)*0.6,
+        lerp(hero.position.y, 0.6, cyc),
+        (s2-0.5)*U.B*1.1);
+    }
+    pos.needsUpdate = true;
+    const ph = (time*0.45) % 1;
+    ripple.scale.setScalar(lerp(40, 160, ph));
+    rippleMat.opacity = (1-ph)*0.3;
+    ripple.position.set(DAM_X, 0.45, 0);
+  } else rippleMat.opacity = 0;
+
+  if (stage <= 2){
+    crane.userData.slew.rotation.y = Math.sin(time*0.12)*1.1 - 0.5;
+    crane.userData.hook.position.x = 32 + Math.sin(time*0.2)*10;
+  }
+  buoys.forEach((b, i) => {
+    b.visible = stage >= 1 && stage < 5;
+    b.position.y = Math.sin(time*1.4 + i*1.3)*0.3;
+  });
+}
+
+function cameraConstruction(stage, t, out){
+  const e = easeIO(t), P = out.pos, L = out.look;
+  switch (stage){
+    case 0: P.set(lerp(2600,900,e), lerp(420,220,e), lerp(-1900,950,e)); L.set(0,6,0); break;
+    case 1: P.set(lerp(-1080,-790,e), lerp(150,60,e), lerp(-1660,-1430,e));
+            L.set(-630, lerp(0,12,e), -1230); break;
+    case 2: P.set(lerp(-900,-830,e), lerp(75,45,e), lerp(-990,-1120,e));
+            L.copy(hero.position); L.y += 12; break;
+    case 3: P.set(hero.position.x + lerp(-180,240,e), lerp(95,70,e), hero.position.z + lerp(-280,-280,e));
+            L.copy(hero.position); L.y += 8; break;
+    case 4: { const a = 0.7 + t*1.5, r = lerp(340,180,e), h = lerp(130,60,e);
+            P.set(DAM_X + Math.cos(a)*r, h, Math.sin(a)*r*1.3);
+            L.set(DAM_X, lerp(6,-2,e), 0); break; }
+    case 5: P.set(lerp(460,390,e), lerp(38,20,e), lerp(330,150,e));
+            L.set(lerp(0,4,e), lerp(4,6,e), lerp(0,55,e)); break;
+    case 6: P.set(lerp(520,1600,e), lerp(70,430,e), lerp(-380,-300,e)); L.set(0,5,0); break;
+  }
+}
+
+const SCN = [
+  { name:'Triều 15 ngày · ngăn mặn – giữ ngọt', dur:90,
+    desc:'MỘT KỲ TRIỀU CƯỜNG–KÉM 15 ngày (nén còn 90 giây), triều bán nhật pha tạp đặc trưng cửa sông ĐBSCL. Van tự động: đóng khi biển cao hơn (chặn nêm mặn), kéo cả hai lá khi sông cao hơn (tiêu ngọt thừa), giữ ngọt ≥ +0,25 m. Đường XÁM/ĐỎ trên đồ thị: mực sông nếu KHÔNG có công trình — mặn theo từng con triều vào sâu. Mô phỏng cân bằng khối minh hoạ, sẽ nối kết quả thuỷ lực thật ở F0.' },
+  { name:'Mùa lũ 30 ngày · tiêu thoát', dur:100,
+    desc:'BA MƯƠI NGÀY mùa lũ (nén còn 100 giây): đường quá trình lũ dạng chuông, đỉnh ~10.000 m³/s quanh ngày 16, triều biển vẫn dao động hằng ngày. KÉO HẾT cả hai lá của 48 khoang: tổng bề rộng thoát ≈ 1.675 m — mực nước chỉ dâng thêm ≈ 5 cm so với sông tự nhiên. Đập hộp chìm gần như trả lại mặt cắt sông khi cần thoát lũ.' },
+  { name:'Bão 4 ngày · nước dâng phía biển', dur:80,
+    desc:'BỐN NGÀY trước–trong–sau bão (nén còn 80 giây): nước dâng dạng chuông đỉnh ≈ +4,4 m (P0,1% = +4,39) chồng lên triều, đỉnh bão ngày thứ 2–3. Van tự đóng khi biển vượt sông; cùng HỆ THỐNG ĐÊ BIỂN +6,3 m hai cánh, vùng sông và đồng bằng được che chắn hoàn toàn — kéo thanh so sánh để thấy cảnh ngập nếu KHÔNG có công trình.' }
+];
+const SCN_T_DAYS = [15, 30, 4];
+
+// ============================================================
+// MÔ PHỎNG CÂN BẰNG KHỐI 0-D NHIỀU NGÀY (minh hoạ — nối số thật ở F0):
+//   hồ trữ thượng lưu A≈50 km² · nước nguồn Qin(t) · dòng qua 48 khoang
+//   Q = Cd·B·h·√(2g·ΔH) · quy trình van tự động giữ ngọt ≥ +0,25 m
+//   KHÔNG công trình: triều/nước dâng truyền vào vùng sông (quán tính ~2 h)
+// ============================================================
+let scnIdx = 0, scnT = 0, liveSaltW = 0, liveSaltN = 0;
+let splitOn = false, splitF = 0.5, simS = null, simK = 0;
+const SIMS = [null, null, null];
+function seaOf(i, tD){
+  const semi = Math.sin(2*Math.PI*1.93*tD), diur = Math.sin(2*Math.PI*0.97*tD + 0.8);
+  if (i === 0){
+    const A = 0.95 + 0.62*Math.sin(2*Math.PI*tD/14.77 - 1.25);   // kỳ cường–kém
+    return 0.42 + A*semi + 0.28*diur;
+  }
+  if (i === 1) return 0.30 + 1.05*semi + 0.25*diur;
+  const surge = 2.95*Math.exp(-Math.pow((tD - 2.4)/0.55, 2));     // nước dâng dạng chuông
+  return 0.42 + 0.95*semi + 0.25*diur + surge;
+}
+function QinOf(i, tD){
+  if (i === 0) return 180;
+  if (i === 1) return 2500 + 7500*Math.exp(-Math.pow((tD - 16)/6, 2));
+  return 350;
+}
+function simulate(i){
+  const N = 1800, TD = SCN_T_DAYS[i], dt = TD*86400/N;
+  const A = 5.0e7, Btot = 48*34.9, Cd = 0.6, SILL = U.boxTop;
+  const sea = new Float32Array(N), rW = new Float32Array(N), rN = new Float32Array(N);
+  const sW = new Float32Array(N), sN = new Float32Array(N);
+  const open = new Uint8Array(N);
+  let r = 0.42, rn = 0.3, wasOpen = false, saltN = 0.5, saltW = 0.02, dwell = 99;
+  for (let k = 0; k < N; k++){
+    const tD = k/N*TD, se = seaOf(i, tD), Qin = QinOf(i, tD);
+    rn += ((se - rn)/7200 + Qin/A)*dt;
+    let op;
+    if (i === 1){ op = true; r = rn + 0.05; }
+    else {
+      const wantOpen = wasOpen ? (r > se + 0.06 && r > 0.22) : (r > se + 0.18 && r > 0.30);
+      if (wantOpen !== wasOpen){
+        if (dwell >= 24){ wasOpen = wantOpen; dwell = 0; }   // ≥0,2 ngày mới đổi trạng thái (chống giật)
+        else dwell++;
+      } else dwell++;
+      op = wasOpen;
+      let r2 = r + (Qin/A)*dt;
+      if (op){
+        const h = Math.min(Math.max((r + se)/2 - SILL, 0.5), 12);
+        r2 -= Cd*Btot*h*Math.sqrt(19.62*Math.abs(r - se))*Math.sign(r - se)/A*dt;
+        if (r > se && r2 < se) r2 = se + 0.02;          // không tháo quá mực biển
+      }
+      r = r2;
+    }
+    if (i === 1){                                  // mùa lũ: nước ngọt đẩy mặn ra biển
+      saltN += (0 - saltN)*dt/14400;
+      saltW += (0 - saltW)*dt/14400;
+    } else {
+      saltN += (((se > rn) ? 1 : 0) - saltN)*dt/((se > rn) ? 10800 : 43200);
+      saltW += (((op && se > r) ? 1 : 0) - saltW)*dt/((op && se > r) ? 10800 : 64800);
+    }
+    sea[k] = se; rW[k] = r; rN[k] = rn; open[k] = op ? 1 : 0; sW[k] = saltW; sN[k] = saltN;
+  }
+  return { sea, rW, rN, open, sW, sN, N };
+}
+function getSim(i){ return SIMS[i] || (SIMS[i] = simulate(i)); }
+function setBarrierVisible(v){
+  riverMat.uniforms.uProtect.value = v ? 1 : 0;
+  seaMat.uniforms.uProtect.value = v ? 1 : 0;
+  allUnits.forEach(u => u.visible = v);
+  if (lockGrp) lockGrp.visible = v;
+  if (boatGrp) boatGrp.visible = v;
+  if (liftGrp) liftGrp.visible = v;
+  linksGrp.visible = v;
+  endsGrp.visible = v;
+  dikeGrp.visible = v;
+}
+function updateSplitUI(){
+  $('splitBar').style.left = (splitF*100) + '%';
+  $('splitL').style.left = (splitF*50) + '%';
+  $('splitR').style.left = ((1 + splitF)*50) + '%';
+}
+function setSplit(v){
+  splitOn = v;
+  ['splitBar','splitL','splitR'].forEach(id => $(id).style.display = v ? 'block' : 'none');
+  const b = $('cmpBtn');
+  b.textContent = v ? '⇄ Tắt chia đôi so sánh' : '⇄ Chia đôi: CÓ ↔ KHÔNG công trình';
+  b.classList.toggle('on', v);
+  if (!v){ setBarrierVisible(true); riverMat.uniforms.uFloodViz.value = 0; }
+  else updateSplitUI();
+}
+function applySide(noDam){
+  setBarrierVisible(!noDam);
+  if (!simS) return;
+  if (noDam){
+    riverWater.position.y = simS.rN[simK];
+    riverMat.uniforms.uSaltX.value = lerp(600, -3600, Math.pow(simS.sN[simK], 0.8));
+    riverMat.uniforms.uFloodViz.value = 1;
+    flow.visible = false;
+  } else {
+    riverWater.position.y = cur.river;
+    riverMat.uniforms.uSaltX.value = lerp(600, -3600, Math.pow(clamp01(cur.salt), 0.8));
+    riverMat.uniforms.uFloodViz.value = 0;
+  }
+}
+// đồ thị nhiều ngày: lưới ngày + biển + sông CÓ/KHÔNG đập + dải van + con trỏ
+function drawChart(){
+  if (manualOn){
+    const cv = document.getElementById('lvlChart');
+    const x = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    x.clearRect(0, 0, W, H);
+    const yOf = v => H - 14 - (v + 2.2)/8.6*(H - 22);
+    for (let v = -2; v <= 6; v += 2){
+      x.strokeStyle = 'rgba(255,255,255,0.12)'; x.lineWidth = 1;
+      x.beginPath(); x.moveTo(0, yOf(v)); x.lineTo(W, yOf(v)); x.stroke();
+      x.fillStyle = 'rgba(255,255,255,0.5)'; x.font = '9px Segoe UI';
+      x.fillText((v > 0 ? '+' : '') + v, 3, yOf(v) - 2);
+    }
+    x.strokeStyle = 'rgba(255,90,90,0.75)'; x.setLineDash([4, 3]);
+    x.beginPath(); x.moveTo(0, yOf(5.4)); x.lineTo(W, yOf(5.4)); x.stroke();
+    x.setLineDash([]);
+    const pl = (arr, color) => {
+      if (histLen < 2) return;
+      x.strokeStyle = color; x.lineWidth = 1.8; x.beginPath();
+      for (let i = 0; i < histLen; i++){
+        const px = i/(HIST_N - 1)*W;
+        i === 0 ? x.moveTo(px, yOf(arr[i])) : x.lineTo(px, yOf(arr[i]));
+      }
+      x.stroke();
+    };
+    pl(histSea, '#3fd0e0'); pl(histR, '#ffd34d');
+    x.fillStyle = '#ff8076'; x.font = 'bold 10px Segoe UI';
+    x.fillText('● LIVE — điều khiển tay', 6, 12);
+    return;
+  }
+  const S = getSim(scnIdx);
+  const cv = document.getElementById('lvlChart');
+  const x = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  x.clearRect(0, 0, W, H);
+  const yOf = v => H - 14 - (v + 2.2)/8.6*(H - 22);
+  const kOf = i => Math.min(S.N - 1, (i/W*S.N)|0);
+  const D = SCN[scnIdx].dur, tNow = (scnT % D)/D, TD = SCN_T_DAYS[scnIdx];
+  for (let i = 0; i < W; i += 2){
+    x.fillStyle = S.open[kOf(i)] ? 'rgba(90,200,140,0.14)' : 'rgba(255,150,70,0.10)';
+    x.fillRect(i, 4, 2, H - 20);
+  }
+  x.lineWidth = 1;
+  for (let v = -2; v <= 6; v += 2){
+    x.strokeStyle = 'rgba(255,255,255,0.12)';
+    x.beginPath(); x.moveTo(0, yOf(v)); x.lineTo(W, yOf(v)); x.stroke();
+    x.fillStyle = 'rgba(255,255,255,0.5)'; x.font = '9px Segoe UI';
+    x.fillText((v > 0 ? '+' : '') + v, 3, yOf(v) - 2);
+  }
+  // lưới NGÀY
+  x.strokeStyle = 'rgba(255,255,255,0.07)';
+  for (let dD = 1; dD < TD; dD++){
+    const xx = dD/TD*W;
+    x.beginPath(); x.moveTo(xx, 4); x.lineTo(xx, H - 14); x.stroke();
+  }
+  x.fillStyle = 'rgba(255,255,255,0.45)';
+  const stepD = TD > 8 ? 5 : 1;
+  for (let dD = stepD; dD < TD; dD += stepD) x.fillText('ng' + dD, dD/TD*W - 8, H - 4);
+  x.strokeStyle = 'rgba(255,90,90,0.75)'; x.setLineDash([4, 3]);
+  x.beginPath(); x.moveTo(0, yOf(5.4)); x.lineTo(W, yOf(5.4)); x.stroke();
+  x.setLineDash([]);
+  x.fillStyle = 'rgba(255,110,110,0.9)'; x.fillText('đỉnh +5,40', W - 52, yOf(5.4) - 3);
+  x.fillStyle = 'rgba(255,80,66,0.20)';
+  x.beginPath();
+  for (let i = 0; i <= W; i += 2){ const v = S.rN[kOf(i)]; i === 0 ? x.moveTo(i, yOf(v)) : x.lineTo(i, yOf(v)); }
+  for (let i = W; i >= 0; i -= 2) x.lineTo(i, yOf(S.rW[kOf(i)]));
+  x.closePath(); x.fill();
+  const plot = (arr, color, dash) => {
+    x.strokeStyle = color; x.lineWidth = dash ? 1.3 : 1.8;
+    if (dash) x.setLineDash([5, 4]);
+    x.beginPath();
+    for (let i = 0; i <= W; i += 2){
+      const v = arr[kOf(i)];
+      i === 0 ? x.moveTo(i, yOf(v)) : x.lineTo(i, yOf(v));
+    }
+    x.stroke(); x.setLineDash([]);
+  };
+  plot(S.rN, '#ff8076', true);
+  plot(S.sea, '#3fd0e0');
+  plot(S.rW, '#ffd34d');
+  x.fillStyle = '#3fd0e0'; x.fillText('biển', 4, 12);
+  x.fillStyle = '#ffd34d'; x.fillText('sông CÓ đập', 30, 12);
+  x.fillStyle = '#ff8076'; x.fillText('KHÔNG đập', 102, 12);
+  x.strokeStyle = 'rgba(255,255,255,0.9)'; x.lineWidth = 1.2;
+  x.beginPath(); x.moveTo(tNow*W, 4); x.lineTo(tNow*W, H - 14); x.stroke();
+}
+
+let envWind = 5, envHs = 0.4, envDir = 120;
+// ---- ĐIỀU KHIỂN TAY từng khoang: bản đồ 48 khoang theo thứ tự dọc tuyến ----
+let manualOn = false, simSpeed = 1, manualDayT = 0, liveR = 0.4, liveSalt = 0.05, liveOpen = 0;
+const ctlTgt = new Float32Array(48), ctlCur = new Float32Array(48);
+const HIST_N = 420, histSea = new Float32Array(HIST_N), histR = new Float32Array(HIST_N);
+let histLen = 0, histAcc = 0;
+const bayRef = [];
+{
+  const sorted = [...allUnits].sort((a, b) => a.position.z - b.position.z);
+  sorted.forEach(u => {
+    for (let b = 0; b < 4; b++){
+      const gi = bayRef.length;
+      bayRef.push({ unit:u, bay:b });
+      u.userData.variants.forEach(v => {
+        if (v.userData.gatesLo[b]) v.userData.gatesLo[b].userData.ctl = gi;
+        if (v.userData.gatesUp[b]) v.userData.gatesUp[b].userData.ctl = gi;
+      });
+    }
+  });
+}
+// --- nhật ký vận hành + flash 3D phản hồi lệnh ---
+const flashH = new THREE.Box3Helper(new THREE.Box3(), 0xffd34d);
+flashH.material.transparent = true; flashH.visible = false; scene.add(flashH);
+let flashUntil = 0;
+const pendOps = {};
+function simClock(){
+  const d = manualOn ? manualDayT : ((scnT % SCN[scnIdx].dur)/SCN[scnIdx].dur)*SCN_T_DAYS[scnIdx];
+  const hh = (d % 1)*24;
+  return 'Ng' + (Math.floor(d) + 1) + ' ' + String(Math.floor(hh)).padStart(2, '0') + ':'
+    + String(Math.floor((hh % 1)*60)).padStart(2, '0');
+}
+function logOp(txt, cls){
+  const el = $('opLog');
+  el.innerHTML = '<div class="' + (cls || '') + '">[' + simClock() + '] ' + txt + '</div>' + el.innerHTML;
+  while (el.children.length > 8) el.removeChild(el.lastChild);
+}
+function cmdBay(gi, target){
+  ctlTgt[gi] = target;
+  pendOps[gi] = target;
+  logOp('LỆNH ' + (target ? 'MỞ' : 'ĐÓNG') + ' khoang ' + (gi + 1) + ' → tời chạy', 'lgC');
+  const br = bayRef[gi];
+  const lo = br.unit.userData.gatesLo[br.bay];
+  if (lo){
+    flashH.box.setFromObject(lo);
+    flashH.visible = true;
+    flashUntil = performance.now() + 1800;
+  }
+}
+function setGateBay(u, b, g){
+  const lo = u.userData.gatesLo[b];
+  if (lo) lo.position.y = lo.userData.y0 + lo.userData.lift*g;
+  const up = u.userData.gatesUp[b];
+  if (up) up.position.y = up.userData.y0 + up.userData.lift*g;
+}
+function setManual(v){
+  manualOn = v;
+  $('manBtn').classList.toggle('on', v);
+  $('manBtn').textContent = v ? '🕹 Đang ĐIỀU KHIỂN TAY (bấm để tắt)' : '🕹 Điều khiển tay từng khoang';
+  $('ctlBoard').style.display = (v && MODE === 1) ? 'block' : 'none';
+  if (v){
+    const D = SCN[scnIdx].dur;
+    manualDayT = ((scnT % D)/D)*SCN_T_DAYS[scnIdx];
+    liveR = cur.river; liveSalt = clamp01(cur.salt);
+    ctlTgt.fill(cur.gLo > 0.5 ? 1 : 0);
+    ctlCur.fill(cur.gLo > 0.5 ? 1 : 0);
+    histLen = 0;
+  }
+}
+function applyOperation(dt, time){
+  if (manualOn && MODE === 1){
+    // ===== mô hình SỐNG: người dùng mở/đóng khoang → mực nước phản ứng tức thì =====
+    const TD = SCN_T_DAYS[scnIdx];
+    const simDt = dt*simSpeed*(TD*86400/SCN[scnIdx].dur);
+    manualDayT = (manualDayT + simDt/86400) % TD;
+    const tD = manualDayT;
+    const se = seaOf(scnIdx, tD), Qin = QinOf(scnIdx, tD);
+    let Qout = 0, openSum = 0;
+    for (let i = 0; i < 48; i++){
+      openSum += ctlCur[i];
+      if (ctlCur[i] > 0.03){
+        const hh = Math.min(Math.max((liveR + se)/2 - U.boxTop, 0.5), 12);
+        Qout += 0.6*34.9*hh*Math.sqrt(19.62*Math.abs(liveR - se))*Math.sign(liveR - se)*ctlCur[i];
+      }
+    }
+    liveOpen = openSum/48;
+    liveR = Math.max(-2, Math.min(6.5, liveR + (Qin - Qout)/5.0e7*simDt));
+    const saltIn = liveOpen > 0.02 && se > liveR;
+    liveSalt = clamp01(liveSalt + ((saltIn ? 1 : 0) - liveSalt)*simDt/(saltIn ? 9000/Math.max(0.05, liveOpen) : 43200));
+    tgt.mix = 1; tgt.plates = 0;
+    tgt.sea = se; tgt.river = liveR; tgt.salt = liveSalt;
+    tgt.gLo = tgt.gUp = liveOpen;          // cho hiển thị dòng chảy/đồng hồ
+    tgt.seaAmp = scnIdx === 2 ? 1 + Math.max(0, se - 1.6)*0.75 : 1.0;
+    tgt.rivAmp = 0.6;
+    liveSaltW = liveSalt; liveSaltN = liveSalt;
+    // môi trường
+    envWind = scnIdx === 2 ? 8 + 22*Math.exp(-Math.pow((tD - 2.4)/0.7, 2)) : 5 + 2*Math.sin(time*0.5);
+    envDir = scnIdx === 2 ? 90 + 70*ease(tD/4) : 140;
+    envHs = Math.min(4.6, 0.35 + 0.011*Math.pow(Math.max(0, envWind), 1.8));
+    const nOpen = ctlTgt.reduce((a, b) => a + (b > 0.5 ? 1 : 0), 0);
+    statusLine = '🕹 TAY · Ngày ' + (tD + 1).toFixed(1) + ' · ' + nOpen + '/48 khoang mở · biển '
+      + fmtLv(se) + ' · sông ' + fmtLv(liveR) + (saltIn ? ' · ⚠ MẶN ĐANG VÀO!' : '');
+    // lịch sử LIVE cho đồ thị
+    histAcc += dt;
+    if (histAcc > 0.18){
+      histAcc = 0;
+      if (histLen < HIST_N) { histSea[histLen] = se; histR[histLen] = liveR; histLen++; }
+      else {
+        histSea.copyWithin(0, 1); histR.copyWithin(0, 1);
+        histSea[HIST_N - 1] = se; histR[HIST_N - 1] = liveR;
+      }
+    }
+    return;
+  }
+  scnT += dt*simSpeed;
+  const D = SCN[scnIdx].dur, t = (scnT % D)/D, TD = SCN_T_DAYS[scnIdx];
+  // --- gió & sóng theo kịch bản (minh hoạ) ---
+  const tD = t*TD;
+  if (scnIdx === 0){
+    envWind = 4.5 + 2.2*Math.sin(2*Math.PI*tD/2.5) + 0.6*Math.sin(time*0.7);
+    envDir = 135 + 18*Math.sin(2*Math.PI*tD/5);                  // gió mùa Đông Nam
+  } else if (scnIdx === 1){
+    envWind = 7.5 + 3*Math.sin(2*Math.PI*tD/4) + 0.8*Math.sin(time*0.9);
+    envDir = 225 + 14*Math.sin(2*Math.PI*tD/6);                  // gió mùa Tây Nam
+  } else {
+    envWind = 8 + 22*Math.exp(-Math.pow((tD - 2.4)/0.7, 2)) + Math.max(0, Math.sin(time*2.6))*2.5;
+    envDir = 90 + 70*ease(tD/4);                                  // bão: gió xoay Đ → Nam
+  }
+  envHs = Math.min(4.6, 0.35 + 0.011*Math.pow(Math.max(0, envWind), 1.8));
+  const S = getSim(scnIdx), k = Math.min(S.N - 1, (t*S.N)|0);
+  const day = 'Ngày ' + (t*TD + 1).toFixed(1) + '/' + TD + ' · ';
+  tgt.mix = 1; tgt.plates = 0;
+  liveSaltW = S.sW[k]; liveSaltN = S.sN[k];
+  simS = S; simK = k;
+  tgt.sea = S.sea[k]; tgt.river = S.rW[k];
+  tgt.salt = S.sW[k];
+  const op = !!S.open[k];
+  tgt.gLo = op ? 1 : 0; tgt.gUp = op ? 1 : 0;
+  if (scnIdx === 0){
+    tgt.seaAmp = 1.0; tgt.rivAmp = 0.55;
+    statusLine = day + (op
+      ? 'triều rút → KÉO CẢ HAI LÁ · tiêu ngọt, đẩy mặn'
+      : 'triều lên → ĐÓNG van · chặn mặn')
+      + ' — nếu KHÔNG đập: sông ' + fmtLv(S.rN[k]) + ' m, mặn ' + (S.sN[k]*18).toFixed(0) + '‰';
+  } else if (scnIdx === 1){
+    tgt.seaAmp = 0.9; tgt.rivAmp = 0.8;
+    statusLine = day + 'lũ ' + Math.round(QinOf(1, t*TD)).toLocaleString('vi-VN')
+      + ' m³/s → MỞ HẾT 48 khoang · dâng thêm ≈ 5 cm so với tự nhiên';
+  } else {
+    tgt.seaAmp = 1 + Math.max(0, tgt.sea - 1.6)*0.75;
+    tgt.rivAmp = 0.7;
+    statusLine = day + 'biển ' + fmtLv(tgt.sea) + ' m → ' + (op ? 'van MỞ (tranh thủ tiêu nước)' : 'ĐÓNG kín + đê biển +6,3')
+      + ' · sông giữ ' + fmtLv(tgt.river)
+      + ' — KHÔNG công trình: ngập ' + fmtLv(S.rN[k]) + ' m (~' + floodKm2(S.rN[k]).toFixed(0) + ' km²)';
+  }
+}
+
+// ============================================================
+// CHẾ ĐỘ 2 — KHÁM PHÁ (tĩnh, mặt cắt, bộ phận)
+// ============================================================
+let partIdx = -1, cutMode = 0, gateCycle = 0, spinOn = false,
+    waterHidden = false, xrayOn = false;
+const BLK_HALF = 36.7/2;
+function setCut(m){
+  cutMode = m;
+  clipPlane.constant  = m === 0 ? 1e6 : (m === 1 ? BAY_Z[2] : BLK_HALF);
+  clipPlane2.constant = m === 2 ? BLK_HALF : 1e6;
+  const b = $('xCut');
+  b.textContent = ['Cắt: tắt', 'Cắt: mặt phẳng khoang', 'Cắt: khối đại diện 36,7 m'][m];
+  b.classList.toggle('on', m > 0);
+  if (m > 0) buildForces(forceCase);
+}
+// --- nhãn chú thích 3D: bảng tên + đường chỉ vào bộ phận ---
+const labelsGrp = new THREE.Group(); labelsGrp.visible = false; scene.add(labelsGrp);
+const labelLineMat = new THREE.LineBasicMaterial({ color:0xffd34d, depthTest:false, transparent:true, opacity:0.9 });
+function makeTextSprite(text, sw){
+  const cv = document.createElement('canvas');
+  cv.width = 1024; cv.height = 168;
+  const x = cv.getContext('2d');
+  x.fillStyle = 'rgba(8,18,30,0.82)';
+  x.strokeStyle = 'rgba(255,211,77,0.95)'; x.lineWidth = 5;
+  const r = 36, w = 1014, h = 158;
+  x.beginPath();
+  x.moveTo(5+r,5); x.lineTo(w-r,5); x.arc(w-r,5+r,r,-Math.PI/2,0);
+  x.lineTo(w,h-r); x.arc(w-r,h-r,r,0,Math.PI/2);
+  x.lineTo(5+r,h); x.arc(5+r,h-r,r,Math.PI/2,Math.PI);
+  x.lineTo(5,5+r); x.arc(5+r,5+r,r,Math.PI,Math.PI*1.5);
+  x.closePath(); x.fill(); x.stroke();
+  x.font = 'bold 56px "Segoe UI", Arial';
+  x.fillStyle = '#ffffff'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText(text, 512, 86);
+  const tex = new THREE.CanvasTexture(cv);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true,
+    depthTest:false, depthWrite:false }));
+  sw = sw || 46;
+  sp.scale.set(sw, sw*7.5/46, 1);
+  sp.renderOrder = 6;
+  return sp;
+}
+const labelRef = {};
+let partsTagged = false, hoverIdx = -1, hoverTick = 0, lastHi = -2;
+const ray = new THREE.Raycaster();
+const mouseNDC = new THREE.Vector2();
+let mousePX = 0, mousePY = 0;
+canvas.addEventListener('pointermove', e => {
+  mousePX = e.clientX; mousePY = e.clientY;
+  mouseNDC.set(e.clientX/innerWidth*2 - 1, -(e.clientY/innerHeight)*2 + 1);
+});
+let downXY = null;
+canvas.addEventListener('pointerdown', e => { downXY = [e.clientX, e.clientY]; });
+canvas.addEventListener('pointerup', e => {
+  if (!downXY) return;
+  const moved = Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]);
+  downXY = null;
+  if (moved < 6 && MODE === 2 && hoverIdx >= 0){
+    selectPart(hoverIdx);
+    chips.forEach((c, k) => c.classList.toggle('on', k === hoverIdx));
+  }
+  // chế độ tay: bấm thẳng vào lá van để nhấc/hạ khoang đó
+  if (moved < 6 && MODE === 1 && manualOn){
+    ray.setFromCamera(mouseNDC, camera);
+    for (const h of ray.intersectObjects(allUnits, true)){
+      let vis = true;
+      for (let q2 = h.object; q2; q2 = q2.parent) if (q2.visible === false){ vis = false; break; }
+      if (!vis) continue;
+      if (h.object.userData && h.object.userData.ctl !== undefined){
+        const gi = h.object.userData.ctl;
+        cmdBay(gi, ctlTgt[gi] > 0.5 ? 0 : 1);
+        break;
+      }
+    }
+  }
+});
+function tagParts(){
+  if (partsTagged) return; partsTagged = true;
+  hero.userData.variants.forEach(v => PARTS.forEach((p, i) => {
+    if (p.node && v.userData[p.node]) v.userData[p.node].traverse(o => { o.userData.partIdx = i; });
+  }));
+}
+// chấm số tròn (hotspot) — chuẩn các viewer 3D chuyên nghiệp
+function makeBadge(n){
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+  const x = cv.getContext('2d');
+  x.beginPath(); x.arc(64, 64, 54, 0, 7);
+  x.fillStyle = 'rgba(16,58,98,0.95)'; x.fill();
+  x.lineWidth = 8; x.strokeStyle = '#8fd0ff'; x.stroke();
+  x.font = 'bold 62px "Segoe UI", Arial'; x.fillStyle = '#fff';
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText(String(n), 64, 68);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+    map:new THREE.CanvasTexture(cv), transparent:true, depthTest:false }));
+  sp.scale.set(5, 5, 1); sp.renderOrder = 8;
+  return sp;
+}
+function buildLabels(){
+  if (labelsGrp.children.length) return;
+  tagParts();
+  PARTS.forEach((p, i) => {
+    if (p.lockPart) return;
+    const sp = makeBadge(i + 1);
+    sp.position.set(DAM_X + p.anchor[0], U.zBed + p.anchor[1] + 2.5, p.anchor[2]);
+    sp.userData.partIdx = i;
+    labelsGrp.add(sp);
+    labelRef[i] = sp;
+  });
+}
+// --- THƯỚC CAO TRÌNH MSL + đường gióng các mốc thiết kế ---
+const elevGrp = new THREE.Group(); elevGrp.visible = false; scene.add(elevGrp);
+const ELEV_MARKS = [
+  [-11.59, 'Đáy bản đáy  −11,59', 0xffd34d],
+  [-6.59,  'Nắp hộp đáy  −6,59',  0x9fd8ff],
+  [-0.595, 'Sàn trung gian  −0,595', 0xd0d0ff],
+  [0.0,    'MSL  0,00', 0xffffff],
+  [5.40,   'Đỉnh đập / đỉnh van  +5,40', 0x7ee087],
+  [8.49,   'Mặt cầu giao thông  +8,5', 0xffa0c0],
+  [15.39,  'Đỉnh khung nâng  +15,4', 0xc9a0ff]
+];
+function buildElev(){
+  if (elevGrp.children.length) return;
+  const X0 = -46, Z0 = -84;          // thước phía sông, sát đầu đơn nguyên
+  box(0.6, 31, 0.6, M.white, X0, 1.5, Z0, elevGrp);
+  for (let v = -13; v <= 17; v++){
+    const big = v % 5 === 0;
+    box(big ? 2.4 : 1.3, 0.12, 0.7, M.dark, X0 + (big ? 1.2 : 0.7), v, Z0, elevGrp);
+    if (big){
+      const n = makeTextSprite((v > 0 ? '+' : '') + v, 6);
+      n.position.set(X0 + 4.5, v, Z0);
+      elevGrp.add(n);
+    }
+  }
+  ELEV_MARKS.forEach((mk, i) => {
+    const y = mk[0];
+    const ln = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(
+        [new THREE.Vector3(X0, y, Z0), new THREE.Vector3(30, y, Z0)]),
+      new THREE.LineBasicMaterial({ color:mk[2], transparent:true, opacity:0.85, depthTest:false }));
+    ln.renderOrder = 5;
+    elevGrp.add(ln);
+    const sp = makeTextSprite(mk[1], 24);
+    sp.position.set(X0 - 16, y + 1.3, Z0);
+    elevGrp.add(sp);
+  });
+}
+// cao trình từng bộ phận (hiện trong tooltip khi rê chuột)
+const PART_ELEV = [
+  ['Hộp đáy',    '−11,59 → −6,59'],
+  ['Trụ pin',    '−6,59 → +5,40'],
+  ['Khoang cống','thông nước −6,59 → +5,40'],
+  ['Cửa van',    'lá dưới −6,59→−0,6 · lá trên −0,6→+5,40'],
+  ['Khung nâng', '+5,40 → +15,4'],
+  ['Cầu giao thông', 'mặt cầu +8,5'],
+  ['Sàn trung gian', 'cao trình −0,595'],
+  ['Tấm phao',   '−6,59 → +5,40'],
+  ['Gioăng',     '−10,6 → +4,4'],
+  ['Khe phai',   '−6,59 → +5,40'],
+  ['Thang',      'thuỷ chí −1 → +5'],
+  ['Đèn hiệu',   '≈ +17'],
+  ['Âu thuyền',  'đỉnh tường +8,1'],
+  ['Nền',        'hào −12,4 · đệm −11,59 · cừ tới −29,6']
+];
+function elevOf(p){
+  for (const e of PART_ELEV) if (p.name.indexOf(e[0]) === 0) return e[1];
+  return '';
+}
+const FCASES = [
+  { id:'BC_DRY_HHWL',    label:'Ngăn mặn — triều cường biển', tl:-1.42, hl:3.50, note:'Mùa khô, triều cường: biển P0,5% = +3,50 · sông P95 = −1,42' },
+  { id:'BC_EXTREME_P01', label:'Bão — nước dâng cực hạn P0,1%', tl:0.00, hl:4.39, note:'Nước dâng P0,1% = +4,39; sông 0,0 — theo bảng lực thiết kế' },
+  { id:'BC_BDKH_2100',   label:'Biến đổi khí hậu 2100', tl:-1.42, hl:5.33, note:'RCP8.5/2100: biển +5,33 — sát đỉnh đập +5,40' }
+];
+let forceCase = 0, focusOn = false, forceOn = false;
+const forceGrp = new THREE.Group(); forceGrp.visible = false; scene.add(forceGrp);
+const forceMats = {};
+function fMat(c){
+  return forceMats[c] || (forceMats[c] = new THREE.MeshBasicMaterial({
+    color:c, depthTest:false, transparent:true, opacity:0.95 }));
+}
+function mkArrow(px, py, dir, len, color, r){
+  r = r || 0.4;
+  const grp = new THREE.Group();
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 6), fMat(color));
+  const head  = new THREE.Mesh(new THREE.CylinderGeometry(0.001, r*2.8, r*7, 8), fMat(color));
+  shaft.position.y = len/2; head.position.y = len + r*3.2;
+  shaft.renderOrder = head.renderOrder = 7;
+  grp.add(shaft, head);
+  if (dir === 'x+') grp.rotation.z = -Math.PI/2;
+  else if (dir === 'x-') grp.rotation.z = Math.PI/2;
+  else if (dir === 'y-') grp.rotation.z = Math.PI;
+  grp.position.set(px, py, 0);
+  forceGrp.add(grp);
+}
+function pressShape(pts, color){
+  const sh = new THREE.Shape();
+  sh.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) sh.lineTo(pts[i][0], pts[i][1]);
+  sh.lineTo(pts[0][0], pts[0][1]);
+  const m = new THREE.Mesh(new THREE.ShapeGeometry(sh),
+    new THREE.MeshBasicMaterial({ color, transparent:true, opacity:0.4, depthTest:false, side:THREE.DoubleSide }));
+  m.renderOrder = 6; forceGrp.add(m);
+  const ln = new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(pts.concat([pts[0]]).map(p => new THREE.Vector3(p[0], p[1], 0.05))),
+    new THREE.LineBasicMaterial({ color, depthTest:false, transparent:true, opacity:0.95 }));
+  ln.renderOrder = 7; forceGrp.add(ln);
+}
+const MW = { K:43581, Gw:73277, G1:13265, Gm:13320, G4:4537, G7:5369, G2:2566, Gb:39651 };
+const fmtKN = v => Math.round(v).toLocaleString('vi-VN');
+function buildForces(ci){
+  while (forceGrp.children.length) forceGrp.remove(forceGrp.children[0]);
+  const fc = FCASES[ci];
+  const SC = 0.07, B_BAY = 34.9, B_PIER = 1.8, B_BLK = 36.7;
+  const zbed = U.zBed, zbox = U.boxTop, zmid = U.mid;
+  const pAt = (wl, z) => 10*Math.max(0, wl - z);
+  const tl = fc.tl, sl = fc.hl;
+  const tlL = tl - zbed, slL = sl - zbed, btL = U.boxH;
+  const xg = X_GATE_LO;
+  const Hbox = wl => 0.5*(pAt(wl,zbed)+pAt(wl,zbox))*(zbox-zbed)*B_BAY;
+  const Hgd  = wl => wl > zmid ? 0.5*(pAt(wl,zbox)+pAt(wl,zmid))*(zmid-zbox)*B_BAY
+                               : 0.5*pAt(wl,zbox)*Math.max(0, wl-zbox)*B_BAY;
+  const Hgt  = wl => wl > zmid ? 0.5*pAt(wl,zmid)*(wl-zmid)*B_BAY : 0;
+  const Ppier= wl => 0.5*10*Math.pow(wl-zbed,2)*B_PIER;
+  const H3 = Hbox(tl), H4 = Hbox(sl);
+  const H1 = Hgd(tl)+Hgt(tl), H2 = Hgd(sl)+Hgt(sl);
+  const P1 = Ppier(tl), P2 = Ppier(sl);
+  const Uf = 0.5*(pAt(tl,zbed)+pAt(sl,zbed))*U.L*B_BLK;
+  const G5 = 10*1526*Math.max(0, Math.min(tl,zmid)-zbox) + 10*1526*Math.max(0, tl-zmid);
+  const G6 = 10*219 *Math.max(0, Math.min(sl,zmid)-zbox) + 10*219 *Math.max(0, sl-zmid);
+  const SG = MW.K+MW.Gw+MW.G1+MW.Gm+MW.G4+MW.G7+MW.G2+MW.Gb;
+  const SWTOP = G5+G6, SH = (H4+H2+P2)-(H3+H1+P1), N = SG+SWTOP-Uf;
+  const sym = (txt, x, y, w) => {
+    const sp = makeTextSprite(txt, w || 10);
+    sp.position.set(x, y, 0.2); forceGrp.add(sp);
+  };
+  const pH2 = (slL-btL)*10*SC;
+  pressShape([[xg, slL], [xg, btL], [xg + pH2, btL]], 0x35d6a8);
+  for (let y = btL + 0.9; y < slL - 0.5; y += 1.7){
+    const L = (slL - y)*10*SC;
+    if (L > 0.7) mkArrow(xg + L, y, 'x-', Math.max(0.6, L - 0.4), 0x35d6a8, 0.22);
+  }
+  sym('H2', xg + pH2 + 2.5, (btL+slL)/2 + 2);
+  const pH1 = (tlL-btL)*10*SC;
+  if (pH1 > 0.3){
+    pressShape([[xg, tlL], [xg, btL], [xg - pH1, btL]], 0x4dc3ff);
+    for (let y = btL + 0.8; y < tlL - 0.4; y += 1.5){
+      const L = (tlL - y)*10*SC;
+      if (L > 0.5) mkArrow(xg - L, y, 'x+', Math.max(0.5, L - 0.3), 0x4dc3ff, 0.2);
+    }
+    sym('H1', xg - pH1 - 2.5, tlL + 1);
+  }
+  const p4t = (slL-btL)*10*SC, p4b = slL*10*SC;
+  pressShape([[U.L/2, btL], [U.L/2 + p4t, btL], [U.L/2 + p4b, 0], [U.L/2, 0]], 0x35d6a8);
+  [1.0, 2.5, 4.0].forEach(y => mkArrow(U.L/2 + (slL-y)*10*SC, y, 'x-', (slL-y)*10*SC - 0.4, 0x35d6a8, 0.22));
+  sym('H4', U.L/2 + p4b + 2.5, 2.4);
+  const p3t = (tlL-btL)*10*SC, p3b = tlL*10*SC;
+  pressShape([[-U.L/2, btL], [-U.L/2 - p3t, btL], [-U.L/2 - p3b, 0], [-U.L/2, 0]], 0x4dc3ff);
+  [1.0, 2.5, 4.0].forEach(y => mkArrow(-U.L/2 - (tlL-y)*10*SC, y, 'x+', (tlL-y)*10*SC - 0.4, 0x4dc3ff, 0.22));
+  sym('H3', -U.L/2 - p3b - 2.5, 2.4);
+  const uU = tlL*10*SC, uD = slL*10*SC;
+  pressShape([[-U.L/2, 0], [U.L/2, 0], [U.L/2, -uD], [-U.L/2, -uU]], 0xff7766);
+  for (let x = -U.L/2 + 2; x <= U.L/2 - 2; x += 4){
+    const L = lerp(uU, uD, (x + U.L/2)/U.L);
+    mkArrow(x, -L, 'y+', L - 0.4, 0xff7766, 0.22);
+  }
+  sym('U', 0, -uD - 2.2);
+  const g5L = Math.max(0,(tlL-btL))*10*SC*0.55;
+  if (g5L > 0.3){
+    for (let x = -22; x <= X_GATE_UP - 3; x += 6) mkArrow(x, btL + g5L, 'y-', g5L, 0x9fd8ff, 0.2);
+    sym('G5', -10, btL + g5L + 1.6);
+  }
+  const g6L = (slL-btL)*10*SC*0.55;
+  [xg + 1.8, U.L/2 - 1.2].forEach(x => mkArrow(x, btL + g6L, 'y-', g6L, 0x7fe0d0, 0.2));
+  sym('G6', U.L/2 + 2.2, btL + g6L + 1.4);
+  const wA = (x, yTop, L, color, t) => { mkArrow(x, yTop, 'y-', L, color, 0.32); sym(t, x + 1.6, yTop + 1.4); };
+  wA(0,    13.5, 6.5, 0xffd34d, 'K+Gw');
+  wA(-6,   10.0, 4.5, 0xffe9a0, 'Gb');
+  wA(8,    16.5, 5.0, 0xe8b84d, 'G1');
+  wA(-1.8, 19.5, 3.6, 0xd0d0ff, 'Gm');
+  wA(xg-0.5, 22.5, 3.6, 0x7ee087, 'G4');
+  wA(xg+0.3, 28.0, 2.6, 0xc9a0ff, 'G2');
+  wA(2,    24.5, 3.2, 0xffa0c0, 'G7');
+  mkArrow(7, 12.5, 'x-', 8 + (sl - tl)*1.3, 0xffa040, 0.5);
+  sym('ΣH', -5, 14.2, 11);
+  forceGrp.position.set(DAM_X, U.zBed, (cutMode === 2 ? BLK_HALF : BAY_Z[2]) - 1.0);
+  const dot = c => '<span class="dot" style="background:#' + c.toString(16).padStart(6,'0') + '"></span>';
+  const row = (c, ky, ten, v) => '<tr><td>' + dot(c) + '<b>' + ky + '</b></td><td>' + ten +
+    '</td><td class="v">' + fmtKN(v) + '</td></tr>';
+  $('forceLegend').innerHTML =
+    '<h3>' + fc.label + '</h3>' +
+    '<div style="font-size:11px;opacity:.8;margin-bottom:6px">' + fc.id + ' · Sông ' + fmtLv(tl) + ' m · Biển ' + fmtLv(sl) +
+    ' m · khối đại diện b=36,7 m · đơn vị kN</div>' +
+    '<table>' +
+    row(0xffd34d, 'K+Gw', 'Hộp đáy (bản + tường/vách)', MW.K + MW.Gw) +
+    row(0xffe9a0, 'Gb', 'Dằn trong ô hộp đáy', MW.Gb) +
+    row(0xe8b84d, 'G1', 'Trụ pin', MW.G1) +
+    row(0xd0d0ff, 'Gm', 'Sàn trung gian (−0,595)', MW.Gm) +
+    row(0x7ee087, 'G4', 'Cửa van', MW.G4) +
+    row(0xc9a0ff, 'G2', 'Khung nâng van', MW.G2) +
+    row(0xffa0c0, 'G7', 'Cầu giao thông', MW.G7) +
+    row(0x9fd8ff, 'G5', 'Nước đè nắp hộp phía sông', G5) +
+    row(0x7fe0d0, 'G6', 'Nước đè nắp hộp phía biển', G6) +
+    row(0x4dc3ff, 'H1', 'Nước sông → cửa van (2 tầng)', H1) +
+    row(0x35d6a8, 'H2', 'Nước biển → cửa van (2 tầng)', H2) +
+    row(0x4dc3ff, 'H3', 'Nước sông → mặt hộp đáy', H3) +
+    row(0x35d6a8, 'H4', 'Nước biển → mặt hộp đáy', H4) +
+    row(0x4dc3ff, 'P1', 'Nước sông → mặt trụ pin', P1) +
+    row(0x35d6a8, 'P2', 'Nước biển → mặt trụ pin', P2) +
+    row(0xff7766, 'U', 'Đẩy nổi (η=0,735)', Uf) +
+    '</table>' +
+    '<div class="sum"><b>ΣG = ' + fmtKN(SG) + '</b> · ΣWTOP = ' + fmtKN(SWTOP) +
+    '<br><b style="color:#ffa040">ΣH = ' + fmtKN(SH) + ' → sông</b> · N = ΣG+ΣWTOP−U = <b>' + fmtKN(N) + '</b>' +
+    '<br>K_lật 1,17 · K_trượt 1,40 · σ_max 104,9 kPa — <b style="color:#7ee087">ĐẠT</b> TCVN 4253</div>';
+}
+function setWaterHidden(v){
+  waterHidden = v;
+  riverWater.visible = seaWater.visible = dockWater.visible = !v;
+  const b = $('xWater');
+  b.classList.toggle('on', !v);
+  b.textContent = v ? 'Ẩn nước (đang TẮT nước)' : 'Hiện nước';
+}
+function setXray(v){
+  xrayOn = v;
+  for (const k in matsHero){
+    const m = matsHero[k];
+    m.transparent = v; m.opacity = v ? 0.3 : 1;
+    m.depthWrite = !v; m.needsUpdate = true;
+  }
+  $('xRay').classList.toggle('on', v);
+}
+const highlight = new THREE.Box3Helper(new THREE.Box3(), 0xffc14d);
+highlight.material.transparent = true; highlight.visible = false;
+scene.add(highlight);
+function selectPart(i){
+  partIdx = i;
+  const p = PARTS[i];
+  if (p.lockPart && focusOn) setFocus(false);   // xem âu thuyền thì bỏ chế độ tập trung
+  document.getElementById('stNum').textContent = 'Bộ phận ' + (i+1) + '/' + PARTS.length;
+  document.getElementById('stName').textContent = p.name;
+  document.getElementById('stDesc').textContent = p.desc;
+  orbit.target.set(hero.position.x + p.anchor[0], hero.position.y + p.anchor[1],
+    (p.lockPart ? lockZ : hero.position.z) + p.anchor[2]);
+  orbit.fDist = p.dist;
+  if (p.node && hero.userData[p.node]){
+    highlight.box.setFromObject(hero.userData[p.node]);
+    highlight.visible = true;
+  } else if (p.lockPart){
+    highlight.box.set(new THREE.Vector3(-160, -12, lockZ - 36), new THREE.Vector3(160, 10, lockZ + 36));
+    highlight.visible = true;
+  } else if (p.name.indexOf('Nền') === 0){
+    highlight.box.set(new THREE.Vector3(-30, -30, -80), new THREE.Vector3(30, -11, 80));
+    highlight.visible = true;
+  } else highlight.visible = false;
+}
+function applyExplore(time){
+  if (labelsGrp.visible && !labelsGrp.children.length) buildLabels();
+  // --- rê chuột: hotspot phóng to + tooltip tên bộ phận cạnh con trỏ ---
+  if (labelsGrp.visible){
+    hoverTick = (hoverTick + 1) % 3;
+    if (hoverTick === 0){
+      ray.setFromCamera(mouseNDC, camera);
+      let idx = -1;
+      const hits = ray.intersectObjects([hero].concat(labelsGrp.children), true);
+      for (const h of hits){
+        let vis = true, pi;
+        for (let q = h.object; q; q = q.parent) if (q.visible === false){ vis = false; break; }
+        if (!vis) continue;
+        for (let q = h.object; q; q = q.parent)
+          if (q.userData && q.userData.partIdx !== undefined){ pi = q.userData.partIdx; break; }
+        if (pi !== undefined){ idx = pi; break; }
+      }
+      hoverIdx = idx;
+    }
+    for (const k in labelRef){
+      const sp = labelRef[k], hot = +k === hoverIdx;
+      sp.material.opacity = hot ? 1 : (hoverIdx >= 0 ? 0.4 : 0.92);
+      const sc = hot ? 7.5 : 5;
+      sp.scale.set(sc, sc, 1);
+    }
+    const tip = $('tip');
+    if (hoverIdx >= 0){
+      tip.style.display = 'block';
+      tip.style.left = (mousePX + 16) + 'px';
+      tip.style.top = (mousePY - 34) + 'px';
+      const ev = elevOf(PARTS[hoverIdx]);
+      tip.textContent = (hoverIdx + 1) + '. ' + PARTS[hoverIdx].name + (ev ? '   ▏' + ev + ' m' : '');
+    } else tip.style.display = 'none';
+  } else { hoverIdx = -1; $('tip').style.display = 'none'; }
+  // khung nổi bật: ưu tiên bộ phận đang rê chuột, sau đó bộ phận đã chọn
+  const hi = hoverIdx >= 0 ? hoverIdx : partIdx;
+  if (hi !== lastHi){
+    lastHi = hi;
+    if (hi >= 0 && PARTS[hi].node && hero.userData[PARTS[hi].node]){
+      highlight.box.setFromObject(hero.userData[PARTS[hi].node]);
+      highlight.visible = true;
+    } else if (hi < 0) highlight.visible = labelsGrp.visible ? false : highlight.visible;
+  }
+  if (cutMode > 0 && forceOn){
+    const fc = FCASES[forceCase];
+    tgt.river = fc.tl; tgt.sea = fc.hl;
+    if (!forceGrp.children.length) buildForces(forceCase);
+    forceGrp.visible = true;
+    $('forceLegend').style.display = 'block';
+  } else { forceGrp.visible = false; $('forceLegend').style.display = 'none'; }
+  tgt.mix = 1;
+  if (!(cutMode > 0 && forceOn)){ tgt.sea = 0.8; tgt.river = 0.42; }
+  tgt.seaAmp = 0.7; tgt.rivAmp = 0.5; tgt.plates = 0;
+  tgt.gLo = gateCycle; tgt.gUp = gateCycle;          // đóng cả hai ↔ kéo cả hai lên
+  if (spinOn) orbit.fYaw += 0.0035;
+  highlight.material.opacity = 0.45 + 0.4*Math.sin(time*3.5);
+}
+
+// ============================================================
+// ÁP DỤNG TRẠNG THÁI MƯỢT chung
+// ============================================================
+function applySmooth(dt){
+  const k = 1 - Math.exp(-dt*1.6);
+  for (const key in tgt) cur[key] += (tgt[key] - cur[key])*k;
+  riverWater.position.y = cur.river;
+  seaWater.position.y = cur.sea;
+  riverMat.uniforms.uAmp.value = cur.rivAmp;
+  seaMat.uniforms.uAmp.value = cur.seaAmp;
+  setWaterMix(cur.mix);
+  // mặt nêm mặn: salt 0 → mép biển; salt 1 → loang hết vùng sông
+  riverMat.uniforms.uSaltX.value = lerp(600, -3600, Math.pow(clamp01(cur.salt), 0.8));
+  if (manualOn && MODE === 1){
+    const kg = 1 - Math.exp(-dt*0.55);                 // tốc độ tời nâng
+    for (let i = 0; i < 48; i++) ctlCur[i] += (ctlTgt[i] - ctlCur[i])*kg;
+    bayRef.forEach((br, i) => setGateBay(br.unit, br.bay, ctlCur[i]));
+    allUnits.forEach(u => updateCables(u));
+  } else allUnits.forEach(u => setGates(u, cur.gLo, cur.gUp));
+  // tấm phao: trượt lên + ẩn
+  allUnits.forEach(u => {
+    const fg = u.userData.floatGrp;
+    if (u === hero){
+      fg.visible = cur.plates > 0.02;
+      fg.position.y = (1 - cur.plates)*16;
+    } else fg.visible = false;
+  });
+}
+
+// ---------- dòng chảy qua khoang cống (vệt sao chổi kiểu Windy) ----------
+const laneZ = new Float32Array(48);
+function refreshLanes(){
+  bayRef.forEach((br, i) => { laneZ[i] = br.unit.position.z + BAY_Z[br.bay]; });
+}
+// thế dòng ψ trơn → v = (∂ψ/∂z, −∂ψ/∂x): trường xoáy KHÔNG PHÂN KỲ kiểu earth.nullschool
+function curlVx(x, z, t){
+  return -1500*0.005*Math.sin(x*0.004 + t*0.06)*Math.sin(z*0.005 - t*0.045)
+         -2600*0.0016*Math.sin(x*0.0012 - t*0.025)*Math.sin(z*0.0016 + t*0.035);
+}
+function curlVz(x, z, t){
+  return -1500*0.004*Math.cos(x*0.004 + t*0.06)*Math.cos(z*0.005 - t*0.045)
+         -2600*0.0012*Math.cos(x*0.0012 - t*0.025)*Math.cos(z*0.0016 + t*0.035);
+}
+function updateFlow(time, dt){
+  const dH = cur.river - cur.sea;
+  const seated = hero.position.x === DAM_X && hero.rotation.y === 0;
+  // các khoang đang mở (toạ độ z)
+  const actZ = [];
+  for (let i = 0; i < 48; i++){
+    const w = manualOn ? ctlCur[i] : Math.max(cur.gLo, cur.gUp*0.6);
+    if (w > 0.06) actZ.push(laneZ[i]);
+  }
+  const on = seated && MODE !== 0 || (MODE === 0 && cur.gLo > 0.3 && seated);
+  flow.visible = on;
+  if (!on) return;
+  if (laneZ[0] === 0 && laneZ[47] === 0){ refreshLanes(); return; }
+  const blocked = actZ.length === 0;
+  const dir = (dH >= 0 ? 1 : -1);
+  const v0 = 8 + 22*Math.min(1.6, Math.abs(dH)) + (MODE === 0 ? 14 : 0);
+  const pos = flowGeo.attributes.position.array;
+  const colA = flowGeo.attributes.color.array;
+  if (flowN < flowPrevN) colA.fill(0, flowN*(TRAIL - 1)*6, flowPrevN*(TRAIL - 1)*6);
+  flowPrevN = flowN;
+  const rec = (flowTick++ % flowRec) === 0;          // giãn cách ghi lịch sử = độ dài vệt
+  for (let i = 0; i < flowN; i++){
+    const hb = i*TRAIL*3;
+    flowLife[i] -= dt;
+    let px = flowHist[hb], py = flowHist[hb + 1], pz = flowHist[hb + 2];
+    const out = dir > 0 ? px > 650 : px < -1600;
+    if (flowLife[i] <= 0 || out){
+      // sinh hạt PHỦ TOÀN MẶT SÔNG phía nguồn
+      const r = Math.random();
+      px = dir > 0 ? -1550 + r*r*1500 : 80 + r*r*560;
+      const hw = Math.max(120, riverHW(px) - 90);
+      pz = riverC(px) + (Math.random()*2 - 1)*hw;
+      py = (px < 19 ? cur.river : cur.sea) + 0.5;
+      flowLife[i] = 6 + Math.random()*7;
+      for (let k = 0; k < TRAIL; k++){
+        flowHist[hb + k*3] = px; flowHist[hb + k*3 + 1] = py; flowHist[hb + k*3 + 2] = pz;
+      }
+    }
+    // ---- trường vận tốc toàn sông ----
+    const before = dir > 0 ? px < 19 : px > 19;
+    let near = 0, lz = pz;
+    if (!blocked){
+      let best = 1e9;
+      for (let k = 0; k < actZ.length; k++){
+        const d = Math.abs(actZ[k] - pz);
+        if (d < best){ best = d; lz = actZ[k]; }
+      }
+      near = Math.exp(-Math.pow((px - 19)/55, 2)) * Math.exp(-Math.pow((pz - lz)/60, 2));
+    }
+    // trượt bờ: giữa sông nhanh, mé bờ chậm (profile parabol)
+    const cH = riverC(px), hwH = riverHW(px);
+    const shear = 1 - 0.55*Math.min(1, Math.pow(Math.abs(pz - cH)/hwH, 2));
+    let vx = dir*v0*(0.5 + 2.8*near)*shear;
+    // bám theo độ uốn của tim sông + trường xoáy curl (hết vệt thẳng song song)
+    let vz = vx*0.048*Math.cos(px*0.0008);
+    const cAmp = (1 - near)*(0.35 + 0.4*shear);
+    vx += curlVx(px, pz, time)*cAmp;
+    vz += curlVz(px, pz, time)*cAmp;
+    if (before && Math.abs(pz - lockZ) < 72){
+      near = 0;                                       // dải âu thuyền: tường kín — dòng khựng lại
+      const ddL = Math.abs(px - 19);
+      vx *= clamp01((ddL - 50)/300);
+      if (ddL < 70) flowLife[i] -= dt*4;
+    }
+    if (before && !blocked){
+      const dd = Math.abs(px - 19);
+      if (dd < 450){
+        const k2 = Math.pow(1 - dd/450, 2)*1.5;
+        vz += (lz - pz)*k2;                          // cả sông dồn về các khoang mở
+      }
+    }
+    if (blocked && before){
+      const dd = Math.abs(px - 19);
+      vx *= clamp01((dd - 50)/300);                  // đập đóng: dòng KHỰNG lại trước tuyến
+      if (dd < 70) flowLife[i] -= dt*4;
+    }
+    // giữ trong lòng sông
+    const hwHere = riverHW(px) - 70;
+    const cHere = riverC(px);
+    if (Math.abs(pz - cHere) > hwHere) vz += (cHere - pz)*0.01;
+    px += vx*dt; pz += vz*dt;
+    // mực nước CHUYỂN TIẾP trơn qua đập (đường nước hạ dần ~55 m sau khe van, không nhảy bậc)
+    const upLv = dir > 0 ? cur.river : cur.sea;
+    const dnLv = dir > 0 ? cur.sea : cur.river;
+    const tBl = clamp01(dir*(px - 19)/55);
+    let surfY = upLv + (dnLv - upLv)*tBl + 0.5;
+    // LẶN qua khoang cống: trong hành lang x∈[−29, +23] hạ xuống cao trình khoang dưới (−3,8)
+    if (!blocked){
+      const laneF = Math.exp(-Math.pow((pz - lz)/60, 2));
+      const diveG = laneF*Math.exp(-Math.pow((px + 4)/30, 2));
+      surfY = surfY*(1 - diveG) + (-3.8)*diveG;
+    }
+    py += (surfY - py)*Math.min(1, dt*8);
+    if (rec) flowHist.copyWithin(hb + 3, hb, hb + (TRAIL - 1)*3);
+    flowHist[hb] = px; flowHist[hb + 1] = py; flowHist[hb + 2] = pz;
+    // ---- vệt sao chổi: nền mờ khắp sông, rực tại họng van ----
+    const sp = (0.22 + 0.78*near)*flowJit[i];
+    const sb = i*(TRAIL - 1)*6;
+    for (let k = 0; k < TRAIL - 1; k++){
+      const p0 = hb + k*3, p1 = hb + (k + 1)*3, o = sb + k*6;
+      pos[o]   = flowHist[p0]; pos[o+1] = flowHist[p0+1]; pos[o+2] = flowHist[p0+2];
+      pos[o+3] = flowHist[p1]; pos[o+4] = flowHist[p1+1]; pos[o+5] = flowHist[p1+2];
+      const f0 = 1 - k/(TRAIL - 1), f1 = 1 - (k + 1)/(TRAIL - 1);
+      const b0 = sp*f0*f0*flowBright, b1 = sp*f1*f1*flowBright;
+      colA[o]   = 0.75*b0; colA[o+1] = 0.95*b0; colA[o+2] = b0;
+      colA[o+3] = 0.75*b1; colA[o+4] = 0.95*b1; colA[o+5] = b1;
+    }
+  }
+  flowGeo.attributes.position.needsUpdate = true;
+  flowGeo.attributes.color.needsUpdate = true;
+}
+
+// ============================================================
+// GIAO DIỆN
+// ============================================================
+const $ = id => document.getElementById(id);
+const chipsEl = $('chips'), stNum = $('stNum'), stName = $('stName'), stDesc = $('stDesc'),
+      playBtn = $('playBtn'), seek = $('seek'), clock = $('clock'),
+      gauges = $('gauges'), row2 = $('row2'), xRow = $('xRow');
+let MODE = 0, T = 0, playing = true, curStage = -1, seekDrag = false, chips = [];
+
+function rebuildChips(labels, onpick, activeIdx){
+  chipsEl.innerHTML = '';
+  chips = labels.map((lb, i) => {
+    const c = document.createElement('div');
+    c.className = 'chip' + (i === activeIdx ? ' on' : '');
+    c.textContent = lb;
+    c.onclick = () => { onpick(i); chips.forEach((cc,k) => cc.classList.toggle('on', k===i)); };
+    chipsEl.appendChild(c);
+    return c;
+  });
+}
+function setMode(m){
+  MODE = m;
+  document.querySelectorAll('#modeBar .mode').forEach(el => el.classList.toggle('on', +el.dataset.m === m));
+  gauges.style.display = m === 1 ? 'block' : 'none';
+  row2.style.display = m === 0 ? 'flex' : 'none';
+  xRow.style.display = m === 2 ? 'flex' : 'none';
+  highlight.visible = false;
+  if (splitOn) setSplit(false);
+  if (manualOn) setManual(false);
+  $('ctlBoard').style.display = 'none';
+  $('impact').style.display = m === 1 ? 'block' : 'none';
+  $('scada').style.display = m === 1 ? 'block' : 'none';
+  $('flowCfg').style.display = m === 1 ? 'block' : 'none';
+  if (m === 2){ setWaterHidden(true); buildLabels(); labelsGrp.visible = true; $('xLabel').classList.add('on'); }
+  else {
+    setWaterHidden(false); setXray(false);
+    labelsGrp.visible = false; $('xLabel').classList.remove('on');
+    setCut(0);
+    forceGrp.visible = false;
+    $('forceLegend').style.display = 'none';
+    forceOn = false; $('xForceSel').value = '-1';
+    $('tip').style.display = 'none';
+    elevGrp.visible = false; $('xElev').classList.remove('on');
+    if (focusOn) setFocus(false);
+  }
+  tugs.forEach(t => t.visible = false);
+  ropes.forEach(r => r.visible = false);
+  bubbles.visible = false; rippleMat.opacity = 0;
+  orbit.yaw = orbit.pitch = 0; orbit.dist = 1;
+  if (m === 0){
+    orbit.free = false; curStage = -1;
+    rebuildChips(STAGES.map((s,i) => (i+1)+'. '+s.name.split(' ').slice(0,2).join(' ')),
+      i => { T = stageStart[i] + 0.001; }, 0);
+  } else {
+    // đơn nguyên chính về đúng vị trí — đập hoàn chỉnh
+    hero.position.set(DAM_X, U.zBed, 0); hero.rotation.y = 0;
+    dockWater.position.y = 0.3; cofferGate.position.y = -24;
+    buoys.forEach(b => b.visible = false);
+    orbit.free = true;
+    if (m === 1){
+      scnT = 0;
+      rebuildChips(SCN.map(s => s.name), i => {
+        scnIdx = i; scnT = 0;
+        stNum.textContent = 'Kịch bản ' + (i+1) + '/3';
+        stName.textContent = SCN[i].name;
+        stDesc.textContent = SCN[i].desc;
+        orbit.target.set(0, 2, 0);
+        orbit.fDist = i === 2 ? 700 : 850;
+        orbit.fYaw = i === 2 ? 2.4 : 0.85; orbit.fPitch = 0.34;
+      }, scnIdx);
+      stNum.textContent = 'Kịch bản 1/3'; stName.textContent = SCN[scnIdx].name; stDesc.textContent = SCN[scnIdx].desc;
+      orbit.target.set(0, 2, 0); orbit.fDist = 850; orbit.fYaw = 0.85; orbit.fPitch = 0.34;
+    } else {
+      rebuildChips(PARTS.map(p => p.name.split(' (')[0].split(' −')[0]), selectPart, -1);
+      stNum.textContent = 'Khám phá';
+      stName.textContent = 'Chọn một bộ phận để tìm hiểu';
+      stDesc.textContent = 'Nước đang được ẨN để lộ toàn bộ kết cấu dưới nước (bản đáy rỗng, trụ pin, sàn trung gian). Bấm thẻ để bay tới từng bộ phận; "X-ray" nhìn xuyên bê tông; "Mặt cắt" cắt ngang khoang; nút van đóng/kéo cả hai lá; "Chú thích" bật nhãn + đường chỉ.';
+      orbit.target.set(0, 0, 0); orbit.fDist = 320; orbit.fYaw = 0.9; orbit.fPitch = 0.3;
+    }
+  }
+}
+document.querySelectorAll('#modeBar .mode').forEach(el => el.onclick = () => setMode(+el.dataset.m));
+document.querySelectorAll('#tierBar .mode').forEach(el => el.onclick = () => setTier(+el.dataset.t));
+playBtn.onclick = () => { playing = !playing; playBtn.textContent = playing ? '❚❚' : '▶'; };
+$('cmpBtn').onclick = () => setSplit(!splitOn);
+// --- phóng to/thu nhỏ các dashboard ---
+let uiScale = 1;
+function setUIScale(v){
+  uiScale = Math.max(0.85, Math.min(1.75, v));
+  ['gauges', 'impact', 'forceLegend', 'stageCard'].forEach(id => $(id).style.zoom = uiScale);
+}
+$('uiPlus').onclick = () => setUIScale(uiScale + 0.12);
+$('uiMinus').onclick = () => setUIScale(uiScale - 0.12);
+// --- tốc độ mô phỏng ---
+const SPD = [0.25, 0.5, 1, 2, 4, 8];
+$('spd').oninput = e => {
+  simSpeed = SPD[+e.target.value];
+  $('spdV').textContent = '×' + simSpeed;
+};
+// --- bảng 48 khoang ---
+const bayCells = [];
+{
+  const grid = $('bayGrid');
+  for (let i = 0; i < 48; i++){
+    const c = document.createElement('div');
+    c.className = 'bay';
+    c.title = 'Khoang ' + (i + 1);
+    c.onclick = () => cmdBay(i, ctlTgt[i] > 0.5 ? 0 : 1);
+    grid.appendChild(c);
+    bayCells.push(c);
+  }
+}
+// --- dock: bấm tiêu đề panel để gập/mở (chống chồng lấn kiểu SCADA) ---
+document.querySelectorAll('.dock .panel').forEach(p => {
+  p.addEventListener('click', e => {
+    if (e.target.tagName === 'H3' || (e.target.classList && e.target.classList.contains('num')))
+      p.classList.toggle('min');
+  });
+});
+$('fDen').oninput = e => { flowN = +e.target.value; $('fDenV').textContent = flowN; };
+$('fLen').oninput = e => {
+  flowRec = +e.target.value;
+  $('fLenV').textContent = (TRAIL*flowRec/60).toFixed(1).replace('.', ',') + 's';
+};
+$('fBri').oninput = e => {
+  flowBright = +e.target.value/10;
+  $('fBriV').textContent = '×' + flowBright.toFixed(1).replace('.', ',');
+};
+$('manBtn').onclick = () => setManual(!manualOn);
+$('bAllOpen').onclick = () => { ctlTgt.fill(1); logOp('LỆNH MỞ TOÀN BỘ 48 khoang', 'lgC'); };
+$('bAllClose').onclick = () => { ctlTgt.fill(0); logOp('LỆNH ĐÓNG TOÀN BỘ 48 khoang', 'lgC'); };
+$('bAuto').onclick = () => setManual(false);
+// kéo thanh chia đôi
+let splitDrag = false;
+$('splitBar').addEventListener('pointerdown', e => { splitDrag = true; e.preventDefault(); });
+addEventListener('pointermove', e => {
+  if (!splitDrag) return;
+  splitF = Math.max(0.15, Math.min(0.85, e.clientX/innerWidth));
+  updateSplitUI();
+});
+addEventListener('pointerup', () => splitDrag = false);
+seek.oninput = () => { T = seek.value/1000*TOTAL; };
+seek.addEventListener('pointerdown', () => seekDrag = true);
+addEventListener('pointerup', () => seekDrag = false);
+$('xCut').onclick = () => setCut((cutMode + 1) % 3);
+$('xGate').onclick = e => {
+  gateCycle = (gateCycle + 1) % 2;
+  e.target.textContent = ['Van: đóng cả hai', 'Van: kéo cả hai lên'][gateCycle];
+};
+$('xSpin').onclick = e => { spinOn = !spinOn; e.target.classList.toggle('on', spinOn); };
+$('xWater').onclick = () => setWaterHidden(!waterHidden);
+function setFocus(v){
+  focusOn = v;
+  $('xFocus').classList.toggle('on', v);
+  placedUnits.forEach(u => u.visible = !v);
+  if (lockGrp) lockGrp.visible = !v;
+  if (boatGrp) boatGrp.visible = !v;
+  if (liftGrp) liftGrp.visible = !v;
+  if (v){ orbit.target.set(0, -2, 0); orbit.fDist = 240; }
+}
+$('xFocus').onclick = () => setFocus(!focusOn);
+$('xForceSel').onchange = e => {
+  const v = parseInt(e.target.value, 10);
+  if (v < 0){ forceOn = false; return; }
+  forceOn = true; forceCase = v;
+  if (!xrayOn) setXray(true);            // X-ray để sơ đồ lực nổi rõ
+  if (cutMode === 0) setCut(2);
+  else buildForces(forceCase);
+  orbit.target.set(0, 0, (cutMode === 2 ? BLK_HALF : BAY_Z[2]) - 6);
+  orbit.fDist = 150; orbit.fYaw = Math.PI; orbit.fPitch = 0.12;
+  const fc = FCASES[forceCase];
+  stNum.textContent = 'Tổ hợp tải trọng (theo cấu hình thiết kế)';
+  stName.textContent = fc.id + ' — ' + fc.label;
+  stDesc.textContent = fc.note + '. Kí hiệu trên hình theo FORCE_MAP_LOCK; tên gọi và trị số kN xem bảng chú giải bên trái. Tỷ lệ vẽ áp lực 0,07 m/kPa; γf SW=0,95 đã nhân.';
+};
+$('xRay').onclick = () => setXray(!xrayOn);
+$('xLabel').onclick = e => {
+  buildLabels();
+  labelsGrp.visible = !labelsGrp.visible;
+  e.target.classList.toggle('on', labelsGrp.visible);
+};
+$('xElev').onclick = e => {
+  buildElev();
+  elevGrp.visible = !elevGrp.visible;
+  e.target.classList.toggle('on', elevGrp.visible);
+};
+const fmt = s => String(Math.floor(s/60)).padStart(2,'0') + ':' + String(Math.floor(s%60)).padStart(2,'0');
+function stageOf(T){
+  for (let i = STAGES.length-1; i >= 0; i--)
+    if (T >= stageStart[i]) return { i, t: clamp01((T-stageStart[i])/STAGES[i].dur) };
+  return { i:0, t:0 };
+}
+function updateGauges(){
+  const pc = v => clamp01((v + 2)/8)*100;
+  document.querySelector('#gSea .gBar').style.width = pc(cur.sea) + '%';
+  document.querySelector('#gRiver .gBar').style.width = pc(cur.river) + '%';
+  document.querySelector('#gSea .gVal').textContent = fmtLv(cur.sea) + ' m';
+  document.querySelector('#gRiver .gVal').textContent = fmtLv(cur.river) + ' m';
+  const open = cur.gLo > 0.5 || cur.gUp > 0.5;
+  document.querySelector('#gGate b').textContent =
+    cur.gUp > 0.5 ? 'KÉO CẢ HAI LÁ LÊN' : (cur.gLo > 0.5 ? 'MỞ LÁ DƯỚI' : 'ĐÓNG KÍN');
+  $('gGate').style.color = open ? '#bfe8ff' : '#ffd9b0';
+  const saltBar = (id, v) => {
+    const bar = document.querySelector('#' + id + ' .gBar');
+    bar.style.width = Math.max(3, v*100) + '%';
+    bar.style.background = v < 0.15 ? '#2e9e5b' : (v < 0.45 ? '#d9a514' : '#d6402a');
+    document.querySelector('#' + id + ' .gVal').textContent = (v*18).toFixed(1) + '‰';
+  };
+  saltBar('gSaltW', liveSaltW);
+  saltBar('gSaltN', liveSaltN);
+  const opFrac = manualOn ? liveOpen : Math.max(cur.gLo, cur.gUp);
+  const dH = cur.river - cur.sea;
+  const hEff = Math.min(Math.max((cur.river + cur.sea)/2 - U.boxTop, 0.5), 12);
+  const Q = opFrac > 0.04 ? 0.6*48*34.9*hEff*Math.sqrt(19.62*Math.abs(dH))*Math.sign(dH)*opFrac : 0;
+  document.querySelector('#gOpen .gBar').style.width = Math.max(2, opFrac*100) + '%';
+  document.querySelector('#gOpen .gVal').textContent = Math.round(opFrac*100) + '%';
+  document.querySelector('#gFlow .gBar').style.width = Math.min(100, Math.abs(Q)/40000*100) + '%';
+  document.querySelector('#gFlow .gVal').textContent = Math.abs(Q) < 50 ? '≈ 0'
+    : (Math.abs(Q) >= 1000 ? (Math.abs(Q)/1000).toFixed(1) + 'k' : Math.round(Math.abs(Q)))
+      + ' m³/s ' + (Q > 0 ? '→ biển' : '→ sông');
+  const pAtG = (wl, z) => 10*Math.max(0, wl - z);
+  const HgT = wl => wl > U.mid
+    ? 0.5*(pAtG(wl, U.boxTop) + pAtG(wl, U.mid))*(U.mid - U.boxTop)*34.9 + 0.5*pAtG(wl, U.mid)*(wl - U.mid)*34.9
+    : 0.5*pAtG(wl, U.boxTop)*Math.max(0, wl - U.boxTop)*34.9;
+  const pNet = (HgT(cur.sea) - HgT(cur.river)) * (1 - opFrac);   // van mở thì hết chịu áp
+  document.querySelector('#gPress .gBar').style.width = Math.min(100, Math.abs(pNet)/22000*100) + '%';
+  document.querySelector('#gPress .gVal').textContent =
+    Math.abs(pNet) < 100 ? '≈ 0' : (Math.abs(pNet)/1000).toFixed(1) + ' MN ' + (pNet > 0 ? '→sông' : '→biển');
+  // ---- bảng 48 ô + đèn SCADA ----
+  let moving = Math.abs(cur.gLo - tgt.gLo) > 0.02 || Math.abs(cur.gUp - tgt.gUp) > 0.02;
+  if (manualOn && bayCells.length){
+    moving = false;
+    for (let i = 0; i < 48; i++){
+      const mv = Math.abs(ctlCur[i] - ctlTgt[i]) > 0.05;
+      if (mv) moving = true;
+      bayCells[i].className = 'bay' + (mv ? ' mov' : (ctlTgt[i] > 0.5 ? ' open' : ''));
+    }
+  }
+  $('lHoist').className = 'lamp' + (moving ? ' amber' : '');
+  $('lNav').className = 'lamp' + (cur.sea >= 3.5 ? ' amber' : '');   // đèn hiệu cảnh giới khi triều cường
+  if (flashH.visible){
+    if (performance.now() > flashUntil) flashH.visible = false;
+    else flashH.material.opacity = 0.4 + 0.5*Math.sin(performance.now()/90);
+  }
+  for (const gi in pendOps){
+    if (Math.abs(ctlCur[gi] - pendOps[gi]) < 0.04){
+      logOp('Khoang ' + (+gi + 1) + ' đã ' + (pendOps[gi] ? 'MỞ' : 'ĐÓNG') + ' 100%', 'lgD');
+      delete pendOps[gi];
+    }
+  }
+  // ---- cảnh báo ngưỡng mực biển (BĐ I/II/III) ----
+  const sv = cur.sea;
+  const al = $('alarm');
+  const prevAl = al.className;
+  if (sv >= 4.9){ al.className = 'a3'; al.textContent = 'BÁO ĐỘNG III — biển ' + fmtLv(sv) + ' sát đỉnh +5,40'; }
+  else if (sv >= 4.39){ al.className = 'a2'; al.textContent = 'BÁO ĐỘNG II — biển ' + fmtLv(sv) + ' ≥ P0,1% (+4,39)'; }
+  else if (sv >= 3.5){ al.className = 'a1'; al.textContent = 'BÁO ĐỘNG I — biển ' + fmtLv(sv) + ' ≥ HHWL (+3,50)'; }
+  else { al.className = ''; al.textContent = ''; }
+  if (al.className !== prevAl && al.className) logOp('⚠ ' + al.textContent, 'lgA');
+  // ---- la bàn gió / sóng ----
+  const beaufort = Math.max(0, Math.round(Math.pow(envWind/0.836, 2/3)));
+  $('eWind').textContent = envWind.toFixed(1) + ' m/s · cấp ' + beaufort;
+  $('eHs').textContent = 'Hs ' + envHs.toFixed(1) + ' m · Tp ' + (3.2 + envHs*1.9).toFixed(0) + ' s';
+  const DIRS = ['B','BĐB','ĐB','ĐĐB','Đ','ĐĐN','ĐN','NĐN','N','NTN','TN','TTN','T','TTB','TB','BTB'];
+  $('eDir').textContent = DIRS[Math.round(envDir/22.5) % 16] + ' (' + Math.round(envDir) + '°)';
+  const ec = document.getElementById('envCv').getContext('2d');
+  const R = 46;
+  ec.clearRect(0, 0, 92, 92);
+  ec.strokeStyle = 'rgba(255,255,255,0.25)'; ec.lineWidth = 1.5;
+  ec.beginPath(); ec.arc(R, R, 40, 0, 7); ec.stroke();
+  ec.fillStyle = 'rgba(255,255,255,0.6)'; ec.font = '10px Segoe UI';
+  ec.fillText('B', R - 3, 12); ec.fillText('N', R - 3, 88);
+  ec.fillText('Đ', 80, R + 4); ec.fillText('T', 4, R + 4);
+  const arrow = (deg, color, len, w) => {
+    const a = (deg - 90)*Math.PI/180;
+    ec.save(); ec.translate(R, R); ec.rotate(a);
+    ec.strokeStyle = color; ec.fillStyle = color; ec.lineWidth = w;
+    ec.beginPath(); ec.moveTo(-len*0.55, 0); ec.lineTo(len*0.45, 0); ec.stroke();
+    ec.beginPath(); ec.moveTo(len*0.45 + 8, 0); ec.lineTo(len*0.45 - 2, -5); ec.lineTo(len*0.45 - 2, 5);
+    ec.closePath(); ec.fill();
+    ec.restore();
+  };
+  arrow(envDir, '#ffa040', 56, 3);                       // gió (cam)
+  arrow(envDir + 12 + 6*Math.sin(performance.now()/1700), '#3fd0e0', 44, 2);  // sóng (xanh ngọc)
+  // ---- panel TÁC ĐỘNG ----
+  if (simS){
+    const fW = simS.rW[simK] > 6.3 ? floodKm2(simS.rW[simK]) : 0;   // vành đai kín tới +6,3
+    const fN = floodKm2(simS.rN[simK]);
+    const fmtN = v => Math.round(v).toLocaleString('vi-VN');
+    $('iFw').textContent = fW.toFixed(1) + ' km²';
+    $('iFn').textContent = fN.toFixed(1) + ' km²';
+    $('iPw').textContent = '≈ ' + fmtN(fW*1200) + ' người';
+    $('iPn').textContent = '≈ ' + fmtN(fN*1200) + ' người';
+    $('iAw').textContent = '≈ ' + fmtN(fW*90) + ' tỷ ₫';
+    $('iAn').textContent = '≈ ' + fmtN(fN*90) + ' tỷ ₫';
+    $('iSw').textContent = (liveSaltW*18).toFixed(1) + '‰';
+    $('iSn').textContent = (liveSaltN*18).toFixed(1) + '‰';
+  }
+}
+
+// ============================================================
+// VÒNG LẶP CHÍNH
+// ============================================================
+const camTarget = { pos:new THREE.Vector3(2400,380,-1400), look:new THREE.Vector3(0,0,0) };
+const camPosS = camTarget.pos.clone(), camLookS = new THREE.Vector3(0,0,0);
+const sph = new THREE.Spherical();
+let last = performance.now(), booted = false;
+
+function animate(now){
+  requestAnimationFrame(animate);
+  const dt = Math.min(0.05, (now-last)/1000); last = now;
+  const time = now/1000;
+
+  if (MODE === 0){
+    if (playing){ T += dt; if (T >= TOTAL) T = 0; }
+    const { i:stage, t } = stageOf(T);
+    if (stage !== curStage){
+      curStage = stage;
+      chips.forEach((c,k) => c.classList.toggle('on', k === stage));
+      stNum.textContent = 'Giai đoạn ' + (stage+1) + '/7';
+      stName.textContent = STAGES[stage].name;
+      stDesc.textContent = STAGES[stage].desc;
+      orbit.yaw *= 0.2; orbit.pitch *= 0.2;
+    }
+    if (!seekDrag) seek.value = Math.round(T/TOTAL*1000);
+    clock.textContent = fmt(T) + ' / ' + fmt(TOTAL);
+    applyConstruction(stage, t, time);
+    cameraConstruction(stage, t, camTarget);
+    // xoay/thu phóng người dùng quanh điểm nhìn kịch bản
+    v3a.copy(camTarget.pos).sub(camTarget.look);
+    sph.setFromVector3(v3a);
+    sph.theta -= orbit.yaw;
+    sph.phi = Math.max(0.12, Math.min(1.45, sph.phi + orbit.pitch));
+    sph.radius *= orbit.dist;
+    v3a.setFromSpherical(sph).add(camTarget.look);
+    camTarget.pos.copy(v3a);
+  } else {
+    if (MODE === 1){ applyOperation(dt, time); stDesc.textContent = SCN[scnIdx].desc + '\n\n▶ ' + statusLine; }
+    else applyExplore(time);
+    // quỹ đạo tự do quanh mục tiêu
+    camTarget.look.copy(orbit.target);
+    camTarget.pos.set(
+      orbit.target.x + Math.sin(orbit.fYaw)*Math.cos(orbit.fPitch)*orbit.fDist,
+      orbit.target.y + Math.sin(orbit.fPitch)*orbit.fDist,
+      orbit.target.z + Math.cos(orbit.fYaw)*Math.cos(orbit.fPitch)*orbit.fDist);
+  }
+
+  applySmooth(dt);
+  updateFlow(time, dt);
+  if (MODE === 1){ updateGauges(); drawChart(); }
+
+  const cs = 1 - Math.pow(0.0012, dt);
+  camPosS.lerp(camTarget.pos, cs);
+  camLookS.lerp(camTarget.look, cs);
+  camera.position.copy(camPosS);
+  if (camera.position.y < 4) camera.position.y = 4;
+  camera.lookAt(camLookS);
+
+  // nắng + bóng đổ bám vùng nhìn
+  sun.target.position.copy(camLookS);
+  sun.position.copy(camLookS).addScaledVector(SUN_DIR, 1600);
+
+  riverMat.uniforms.uTime.value = time;
+  seaMat.uniforms.uTime.value = time*0.95;
+  dockMat.uniforms.uTime.value = time*0.5;
+  clouds.forEach(c => { c.position.x += c.userData.v*dt; if (c.position.x > 3600) c.position.x = -3400; });
+
+  if (MODE === 1 && splitOn && simS){
+    renderer.setScissorTest(true);
+    applySide(false);
+    renderer.setScissor(0, 0, innerWidth*splitF, innerHeight);
+    renderer.render(scene, camera);
+    applySide(true);
+    renderer.setScissor(innerWidth*splitF, 0, innerWidth*(1 - splitF), innerHeight);
+    renderer.render(scene, camera);
+    renderer.setScissorTest(false);
+    applySide(false);
+  } else renderer.render(scene, camera);
+  if (!booted){ booted = true;
+    const ld = document.getElementById('loader');
+    ld.style.opacity = 0; setTimeout(() => ld.remove(), 700);
+  }
+}
+addEventListener('resize', () => {
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+setMode(0);
+requestAnimationFrame(animate);
+
+</script>
+<!-- ===== DT0: tầng data + model (MATLAB là nguồn duy nhất — rule 01) ===== -->
+<script>
+/* (module gộp tại chỗ) */
+
+"use strict";
+const DHCModel = (() => {
+
+  const G = 9.81;            // m/s²
+  const RHO_FRESH = 1.000;   // t/m³ (nước ngọt)
+  const RHO_SEA   = 1.025;   // t/m³ (nước biển)
+
+  
+  function pressure(h, rho = RHO_FRESH) {
+    return rho * G * Math.max(h, 0);
+  }
+
+  
+  function hydrostaticForce(h, B, rho = RHO_FRESH) {
+    h = Math.max(h, 0);
+    return 0.5 * rho * G * h * h * B;
+  }
+
+  
+  function netForce(hs, hr, B, rhoS = RHO_SEA, rhoR = RHO_FRESH) {
+    return hydrostaticForce(hs, B, rhoS) - hydrostaticForce(hr, B, rhoR);
+  }
+
+  
+  function K(R, Ntt, { m = 1.0, kn = 1.25, nc = 1.0 } = {}) {
+    if (!(Ntt > 0)) return Infinity;
+    return (m * R) / (kn * nc * Ntt);
+  }
+
+  
+  function discharge(Cd, B, h, dH) {
+    if (dH <= 0 || h <= 0) return 0;
+    return Cd * B * h * Math.sqrt(2 * G * dH);
+  }
+
+  return { G, RHO_FRESH, RHO_SEA, pressure, hydrostaticForce, netForce, K, discharge };
+})();
+if (typeof module !== "undefined") module.exports = DHCModel; // cho test node
+
+</script>
+<script>
+/* (module gộp tại chỗ) */
+
+"use strict";
+const DHCData = (() => {
+  let data = null;
+
+  async function load(url = "data/dhc_data.json") {
+    try {
+      const r = await fetch(url, { cache: "no-store" });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      data = await r.json();
+      return data;
+    } catch (e) {
+      console.warn("[DHCData] fallback — không đọc được " + url + ": " + e.message +
+                   " (mở trang qua http server: python -m http.server)");
+      data = null;
+      return null;
+    }
+  }
+
+  const ready = () => data !== null;
+  const raw   = () => data;
+  const meta  = () => (data && data.meta) || null;
+  const geom  = () => (data && data.geom) || null;
+  const bc    = () => (data && data.bc) || [];
+  const cases = () => (data && data.cases) || [];
+
+  
+  function kpiLast(module, name) {
+    if (!data || !Array.isArray(data.kpi)) return null;
+    for (let i = data.kpi.length - 1; i >= 0; i--) {
+      const k = data.kpi[i];
+      if (k.module === module && k.name === name) return k;
+    }
+    return null;
+  }
+
+  /** KPI chốt (đã là min/hội tụ) — nguồn ưu tiên cho UI. */
+  function kpiMin() { return (data && data.kpi_min) || null; }
+
+  
+  function threshold(key, fallback = null) {
+    if (!data) return fallback;
+    if (key === "sigma_allow") {
+      const m06 = data.results && data.results.m06;
+      if (m06 && m06.summary && m06.summary.sigma_allow != null) return m06.summary.sigma_allow;
+      const m07 = data.results && data.results.m07;
+      if (m07 && m07.sigma_allow != null) return m07.sigma_allow;
+      return fallback; // KHÔNG rơi về thresholds.sigma_allow=40
+    }
+    if (key === "S_allow") {
+      const m07 = data.results && data.results.m07;
+      if (m07 && m07.S_allow != null) return m07.S_allow;
+      return fallback; // thresholds không có key này
+    }
+    const t = data.thresholds || {};
+    return (t[key] != null) ? t[key] : fallback;
+  }
+
+  return { load, ready, raw, meta, geom, bc, cases, kpiLast, kpiMin, threshold };
+})();
+if (typeof module !== "undefined") module.exports = DHCData;
+
+</script>
+<!-- ===== DT1: tầng phát lại kịch bản (ghi đè SIMS[0] = số thật + HUD K) ===== -->
+<script>
+/* (module gộp tại chỗ) */
+
+"use strict";
+const DHCPlayer = (() => {
+  const K_CAP = 20;          // trần hiển thị K (trên mức này coi như "dư an toàn")
+  const K_LIMIT = 1.0;
+  let sim0 = null, loaded = false, meta0 = null;
+
+  /** Dựng sim-shape {sea,rW,rN,open,sW,sN,N, klat,ktru} từ payload JSON. */
+  function buildSim(j) {
+    const col = {}; j.columns.forEach((c, i) => col[c] = i);
+    const R = j.rows, N = R.length;
+    const TD = 15, dt = TD * 86400 / N;                 // bước thực = 3600 s (giờ)
+    const sea = new Float32Array(N), rW = new Float32Array(N), rN = new Float32Array(N);
+    const open = new Uint8Array(N), sW = new Float32Array(N), sN = new Float32Array(N);
+    const klat = new Array(N), ktru = new Array(N);
+    let rn = R[0][col.H_sea], saltN = 0.5, saltW = 0.02;
+    for (let k = 0; k < N; k++) {
+      const r = R[k];
+      const se = +r[col.H_sea];
+      sea[k] = se;
+      rW[k]  = +r[col.H_river];
+      open[k] = (+r[col.gate_lower_frac] > 0.5) ? 1 : 0;
+      klat[k] = numOrNull(r[col.K_lat]);
+      ktru[k] = numOrNull(r[col.K_tru]);
+      // [GT] sông-không-đập: trễ triều ~2h; mặn tích theo con triều (minh hoạ)
+      rn += (se - rn) / 7200 * dt;  rN[k] = rn;
+      saltN += (((se > rn) ? 1 : 0) - saltN) * dt / ((se > rn) ? 10800 : 43200);
+      const op = open[k], rr = rW[k];
+      saltW += (((op && se > rr) ? 1 : 0) - saltW) * dt / ((op && se > rr) ? 10800 : 64800);
+      sN[k] = saltN;  sW[k] = saltW;
+    }
+    return { sea, rW, rN, open, sW, sN, N, klat, ktru };
+  }
+  const numOrNull = v => (v === null || v === undefined || !isFinite(v)) ? null : +v;
+
+  /** Nạp JSON + ghi đè SIMS[0] (nếu engine có mặt). Trả true nếu thành công. */
+  async function load(url = "data/scenarios/trieu-15ngay.json") {
+    try {
+      const r = await fetch(url, { cache: "no-store" });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const j = await r.json();
+      sim0 = buildSim(j);  meta0 = j.meta || {};  loaded = true;
+      if (typeof SIMS !== "undefined" && Array.isArray(SIMS)) {
+        SIMS[0] = sim0;                                  // engine getSim(0) sẽ trả số thật
+        if (typeof simS !== "undefined" && typeof scnIdx !== "undefined" && scnIdx === 0) {
+          try { simS = sim0; } catch (e) {}              // làm tươi ngay nếu đang ở kịch bản 0
+        }
+        console.info("[DHCPlayer] kịch bản 0 = SỐ THẬT (" + sim0.N + " giờ, run " +
+                     (meta0.run_date || "?") + ")");
+      } else {
+        console.warn("[DHCPlayer] chưa thấy SIMS — engine chưa sẵn sàng, sẽ thử lại.");
+      }
+      return true;
+    } catch (e) {
+      loaded = false;
+      console.warn("[DHCPlayer] fallback — không đọc được " + url + ": " + e.message +
+                   " (mở qua http server: python -m http.server)");
+      return false;
+    }
+  }
+
+  /** Định dạng K cho HUD: chặn trần + màu theo ngưỡng TCVN. */
+  function fmtK(v) {
+    if (v === null || !isFinite(v) || v >= K_CAP) return { txt: "≫" + K_CAP, cls: "ok" };
+    const cls = v < K_LIMIT ? "bad" : (v < 1.2 ? "warn" : "ok");
+    return { txt: v.toFixed(2).replace(".", ","), cls };
+  }
+
+  return { load, fmtK, isLoaded: () => loaded, sim: () => sim0, meta: () => meta0, K_CAP, K_LIMIT };
+})();
+
+/* ---------- HUD K trực tiếp + tự nạp ---------- */
+(() => {
+  // Panel HUD nhỏ, nổi trên vùng trời (top-center) — chỉ hiện ở Vận hành + kịch bản 0.
+  function ensureHud() {
+    let el = document.getElementById("dtLiveHud");
+    if (el) return el;
+    el = document.createElement("div");
+    el.id = "dtLiveHud";
+    el.style.cssText = [
+      "position:fixed", "top:88px", "left:50%", "transform:translateX(-50%)",
+      "z-index:50", "pointer-events:none", "display:none",
+      "padding:7px 14px", "border-radius:11px",
+      "background:rgba(12,20,28,.62)", "backdrop-filter:blur(7px)",
+      "border:1px solid rgba(140,240,192,.25)", "color:#dfe9ef",
+      "font:12.5px/1.35 'Segoe UI',sans-serif", "white-space:nowrap",
+      "box-shadow:0 4px 18px rgba(0,0,0,.3)", "text-align:center"
+    ].join(";");
+    document.body.appendChild(el);
+    return el;
+  }
+
+  function gv(name) { try { return eval(name); } catch (e) { return undefined; } }
+  const fmtLv = v => (v >= 0 ? "+" : "") + v.toFixed(2).replace(".", ",");
+
+  function tick() {
+    requestAnimationFrame(tick);
+    const el = ensureHud();
+    const MODE = gv("MODE"), scnIdx = gv("scnIdx"), simS = gv("simS"),
+          simK = gv("simK"), cur = gv("cur"), manualOn = gv("manualOn"),
+          scnT = gv("scnT"), SCN = gv("SCN");
+    const show = DHCPlayer.isLoaded() && MODE === 1 && scnIdx === 0 &&
+                 !manualOn && simS && simS.klat;
+    if (!show) { el.style.display = "none"; return; }
+    const k = Math.min(simS.N - 1, simK | 0);
+    const kl = DHCPlayer.fmtK(simS.klat[k]), kt = DHCPlayer.fmtK(simS.ktru[k]);
+    const day = SCN ? (((scnT % SCN[0].dur) / SCN[0].dur) * 15 + 1).toFixed(1) : "?";
+    const sea = cur ? fmtLv(cur.sea) : "?", riv = cur ? fmtLv(cur.river) : "?";
+    const dH = (cur ? (cur.sea - cur.river) : 0);
+    const gate = simS.open[k] ? "van MỞ · xả ngọt" : "van ĐÓNG · chặn mặn";
+    el.innerHTML =
+      "<b style='color:#8ef0c0'>Ngày " + day + "/15</b> &nbsp;·&nbsp; biển " + sea +
+      " m &nbsp; sông " + riv + " m &nbsp; ΔH " + fmtLv(dH) + " m &nbsp;·&nbsp; " + gate +
+      " &nbsp;·&nbsp; K<sub>lật</sub> <b class='" + kl.cls + "' style='" + col(kl.cls) + "'>" + kl.txt +
+      "</b> &nbsp; K<sub>trượt</sub> <b class='" + kt.cls + "' style='" + col(kt.cls) + "'>" + kt.txt + "</b>";
+    el.style.display = "block";
+  }
+  const col = c => c === "bad" ? "color:#ff7d7d" : (c === "warn" ? "color:#ffce5a" : "color:#7dff9e");
+
+  function boot() {
+    DHCPlayer.load().then(ok => {
+      // engine có thể chưa tạo SIMS lúc fetch xong → thử lại vài nhịp
+      if (ok && (typeof SIMS === "undefined")) {
+        let tries = 0;
+        const iv = setInterval(() => {
+          if (typeof SIMS !== "undefined" && Array.isArray(SIMS)) {
+            SIMS[0] = DHCPlayer.sim(); clearInterval(iv);
+          } else if (++tries > 40) clearInterval(iv);
+        }, 100);
+      }
+    });
+    requestAnimationFrame(tick);
+  }
+  if (document.readyState === "loading")
+    document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+})();
+
+</script>
+<script>
+(async function initDT(){
+  const $id = s => document.getElementById(s);
+  // gập/mở do handler chung của .dock đảm nhiệm (bấm tiêu đề)
+  const d = await DHCData.load();
+  if (!d){
+    $id('dtSrc').textContent = 'FALLBACK — không đọc được data/dhc_data.json. ' +
+      'Trang đang chạy số đóng cứng. Mở qua http server: python -m http.server';
+    $id('dtTag').textContent = '(fallback)';
+    return;
+  }
+  const m = DHCData.meta(), k = DHCData.kpiMin(), g = DHCData.geom();
+  const sigAllow = DHCData.threshold('sigma_allow', 250);
+  const fmt = (x, n=2) => (x==null ? '—' : Number(x).toFixed(n).replace('.', ','));
+  const cls = ok => ok ? 'ok' : 'bad';
+  const rows = [
+    ['K lật (min)',   fmt(k.K_lat_min,3),  k.K_lat_min  >= DHCData.threshold('K_overturn_min',1)],
+    ['K trượt (min)', fmt(k.K_tru_min,3),  k.K_tru_min  >= DHCData.threshold('K_slide_min',1)],
+    ['σ nền max (kPa)', fmt(k.sigma_max,1) + ' / ' + fmt(sigAllow,0), k.sigma_max <= sigAllow],
+    ['e lệch tâm max (m)', fmt(k.e_max,2), true],
+    ['η đẩy ngược', fmt(k.eta_uplift,3), k.seepage_verdict === 'PASS'],
+    ['Lún tổng (m)', fmt(k.settlement_total,3), true],
+    ['Mớn nổi (m)',  fmt(k.h_draft,2), true],
+    ['Case quyết định', k.governing_case || '—', null],
+    ['KẾT LUẬN ỔN ĐỊNH', k.stability_verdict, k.stability_verdict === 'PASS'],
+  ];
+  $id('dtTbl').innerHTML = rows.map(([lab, val, ok]) =>
+    `<tr><td>${lab}</td><td class="v ${ok==null?'':cls(ok)}">${val}</td></tr>`).join('');
+  $id('dtTag').textContent = `· ${m.config_tag}`;
+  $id('dtSrc').textContent =
+    `dhc_data.json · schema ${m.schema_version} · run ${m.run_date} · ` +
+    `B ${g.B} × L ${g.L} × H ${fmt(g.H_struct,2)} m · ${g.n_khoang} khoang`;
+})();
+</script>
+<!-- ===== SITE shell [D-024]: nút quay lại Tổng quan + badge vị trí (additive, KHÔNG sửa engine/UI legacy) ===== -->
+<!-- [F-074] #siteShell phủ toàn màn (pointer-events:none) → đặt RIÊNG từng phần tử, KHÔNG còn top-center đè #modeBar.
+     Nút ⟵ Tổng quan: góc TRÁI-TRÊN. Badge tuyến: góc ĐÁY-TRÁI (trên #credit). Chỉ CSS vị trí, không đụng engine/UI ver_03. -->
+<div id="siteShell" style="position:fixed;inset:0;z-index:99999;pointer-events:none;font-family:system-ui,Segoe UI,Arial,sans-serif">
+  <a href="../index.html" style="position:fixed;top:10px;left:12px;pointer-events:auto;text-decoration:none;background:#0d1b2a;color:#e8f1ff;border:1px solid #335;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.45)">⟵ Tổng quan</a>
+  <span id="sitePosBadge" style="position:fixed;bottom:30px;left:12px;pointer-events:auto;background:#10324f;color:#bfe3ff;border:1px solid #2b6aa0;border-radius:8px;padding:6px 11px;font-size:12px;box-shadow:0 2px 10px rgba(0,0,0,.45)">📍 —</span>
+</div>
+<script>
+(function(){
+  var POS = { P1:'Tuyến P1 — sông Hàm Luông', P2:'Tuyến P2 — cửa sông', P3:'Tuyến P3 — biển' };
+  var p = (new URLSearchParams(location.search).get('pos') || 'P1').toUpperCase();
+  document.getElementById('sitePosBadge').textContent = '📍 ' + (POS[p] || POS.P1);
+})();
+</script>
+
+<style id="presetCss">
+#modeBar{display:none!important}
+#dtPanel{display:none!important}
+#sitePosBadge{display:none!important}
+a[href="../index.html"]{display:none!important}
+/* dời bảng lực sang phải panel bộ phận để không đè nhau */
+#dockL{left:258px!important}
+#forceLegend{max-height:66vh;overflow:auto}
+</style>
+<script id="presetJs">
+(function(){
+  function go(){
+    var m=document.querySelector('.mode[data-m="2"]'); if(m){m.click();}
+    setTimeout(function(){
+      ['xFocus','xLabel','xSpin'].forEach(function(id){
+        var el=document.getElementById(id);
+        if(el && el.getAttribute('data-preset')!=='1'){ el.click(); el.setAttribute('data-preset','1'); }
+      });
+    },150);
+  }
+  if(document.readyState==='complete'){ setTimeout(go,700); }
+  else addEventListener('load',function(){ setTimeout(go,700); });
+})();
+</script>
+
+<style id="partUiCss">
+#chips{display:none!important}#row2{display:none!important}
+#partPanel{position:fixed;left:12px;top:120px;width:236px;max-height:70vh;display:flex;flex-direction:column;
+  background:#161b22ec;border:1px solid #2b3340;border-radius:12px;backdrop-filter:blur(6px);
+  box-shadow:0 6px 22px #0009;overflow:hidden;z-index:30;font:13px system-ui,Segoe UI,Arial;color:#e6edf3}
+#partPanel h3{margin:0;padding:9px 12px;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;
+  color:#4aa3ff;cursor:pointer;display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid #2b3340;user-select:none}
+#partList{overflow:auto;padding:5px}
+#partPanel.col #partList{display:none}
+.pItem{padding:6px 10px;border-radius:7px;cursor:pointer;color:#cdd6df;border:1px solid transparent;
+  font-size:12.5px;line-height:1.35}
+.pItem:hover{background:#1f2733}
+.pItem.act{background:#13325a;border-color:#4aa3ff;color:#fff}
+.pItem.all{color:#9aa7b4;font-style:italic;border-bottom:1px solid #2b3340;border-radius:0;margin-bottom:3px}
+</style>
+<script id="partUiJs">
+(function(){
+  function build(){
+    try{
+      if(typeof PARTS==='undefined'||typeof hero==='undefined'||!hero){return setTimeout(build,300);}
+      if(document.getElementById('partPanel'))return;
+      var P=document.createElement('div');P.id='partPanel';
+      P.innerHTML='<h3>Bộ phận chi tiết <span id="pTgl">▾</span></h3><div id="partList"></div>';
+      document.body.appendChild(P);
+      var list=P.querySelector('#partList');
+      P.querySelector('h3').onclick=function(){P.classList.toggle('col');
+        document.getElementById('pTgl').textContent=P.classList.contains('col')?'▸':'▾';};
+
+      // --- Nhân bản vật liệu RIÊNG cho từng nhóm bộ phận (đơn nguyên đang xem) ---
+      var nodeMap={};
+      PARTS.forEach(function(p){ if(p.node && hero.userData[p.node]) nodeMap[p.node]=hero.userData[p.node]; });
+      var nodes=Object.keys(nodeMap);
+      // dùng đúng mặt phẳng cắt của app cho MỌI bộ phận (kể cả cầu) -> cắt đồng bộ
+      var CP=(typeof clipPlane!=='undefined'&&typeof clipPlane2!=='undefined')?[clipPlane,clipPlane2]:null;
+      function cloneMat(m){ var c=m.clone();
+        if(CP){ c.clippingPlanes=CP; c.clipShadows=true; } else { c.clippingPlanes=m.clippingPlanes; c.clipShadows=m.clipShadows; }
+        c.clipIntersection=m.clipIntersection; c.userData.__o=m.opacity; c.userData.__t=m.transparent; return c; }
+      nodes.forEach(function(k){ nodeMap[k].traverse(function(o){ if(o.material){
+        o.material = Array.isArray(o.material)? o.material.map(cloneMat) : cloneMat(o.material);
+      }});});
+      function setNode(k,on){ nodeMap[k].traverse(function(o){ if(o.material){
+        ([].concat(o.material)).forEach(function(m){
+          if(on){ m.opacity=(m.userData.__o!=null?m.userData.__o:1); m.transparent=!!m.userData.__t; m.depthWrite=true; }
+          else  { m.transparent=true; m.opacity=0.10; m.depthWrite=false; }
+        }); }}); }
+      function ghost(i){ var keep=(i==null)?null:(PARTS[i]&&PARTS[i].node);
+        nodes.forEach(function(k){ setNode(k, keep==null || k===keep); }); }
+
+      var items=[],allRow;
+      function clearAct(){if(allRow)allRow.classList.remove('act');
+        items.forEach(function(x){x.classList.remove('act');});}
+      function mkRow(txt,cls){var d=document.createElement('div');d.className='pItem'+(cls?' '+cls:'');
+        d.textContent=txt;list.appendChild(d);return d;}
+      allRow=mkRow('◯ Xem tổng thể','all');
+      allRow.onclick=function(){clearAct();allRow.classList.add('act');ghost(null);
+        try{if(typeof highlight!=='undefined'&&highlight)highlight.visible=false;}catch(e){}};
+      PARTS.forEach(function(p,i){var it=mkRow((i+1)+'. '+p.name);
+        it.onclick=function(){selectPart(i);};items.push(it);});
+      // bọc selectPart: đồng bộ dòng chọn + mờ ghost các bộ phận khác
+      if(typeof selectPart==='function'){var _s=selectPart;
+        window.selectPart=function(i){_s(i);clearAct();if(items[i])items[i].classList.add('act');ghost(i);};}
+      allRow.classList.add('act');ghost(null);
+    }catch(e){console.warn('partUi:',e);}
+  }
+  addEventListener('load',function(){setTimeout(build,900);});
+})();
+</script>
+</body>
+</html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                    
